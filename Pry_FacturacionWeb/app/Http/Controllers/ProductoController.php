@@ -4,15 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\Producto;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ProductoController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('auth');
-        $this->middleware('user.status');
-        $this->middleware('role:Bodega,Administrador');
-    }
+    // En Laravel 12, el middleware se define en las rutas, no en el constructor del controlador
 
     /**
      * Display a listing of the resource.
@@ -65,10 +61,22 @@ class ProductoController extends Controller
             'precio' => 'required|numeric|min:0.01|max:999999.99',
         ]);
 
-        $producto = Producto::create($validated);
-        
-        return redirect()->route('productos.index')
-            ->with('success', 'Producto creado exitosamente.');
+        try {
+            DB::beginTransaction();
+            
+            $producto = Producto::create($validated);
+            
+            DB::commit();
+            
+            return redirect()->route('productos.index')
+                ->with('success', 'Producto creado exitosamente.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Error al crear el producto: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -105,10 +113,22 @@ class ProductoController extends Controller
             'is_active' => 'boolean',
         ]);
 
-        $producto->update($validated);
-        
-        return redirect()->route('productos.index')
-            ->with('success', 'Producto actualizado exitosamente.');
+        try {
+            DB::beginTransaction();
+            
+            $producto->update($validated);
+            
+            DB::commit();
+            
+            return redirect()->route('productos.index')
+                ->with('success', 'Producto actualizado exitosamente.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Error al actualizar el producto: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -116,20 +136,32 @@ class ProductoController extends Controller
      */
     public function destroy(Producto $producto)
     {
-        // Verificar si el producto está en facturas activas
-        $facturasActivas = $producto->facturas()
-            ->where('estado', 'activa')
-            ->count();
+        try {
+            DB::beginTransaction();
             
-        if ($facturasActivas > 0) {
+            // Verificar si el producto está en facturas activas
+            $facturasActivas = $producto->facturas()
+                ->where('estado', 'activa')
+                ->count();
+                
+            if ($facturasActivas > 0) {
+                DB::rollBack();
+                return redirect()->route('productos.index')
+                    ->with('error', 'No se puede eliminar el producto porque está en facturas activas.');
+            }
+            
+            $producto->delete();
+            
+            DB::commit();
+            
             return redirect()->route('productos.index')
-                ->with('error', 'No se puede eliminar el producto porque está en facturas activas.');
+                ->with('success', 'Producto eliminado exitosamente.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            return redirect()->route('productos.index')
+                ->with('error', 'Error al eliminar el producto: ' . $e->getMessage());
         }
-        
-        $producto->delete();
-        
-        return redirect()->route('productos.index')
-            ->with('success', 'Producto eliminado exitosamente.');
     }
 
     /**
@@ -137,14 +169,25 @@ class ProductoController extends Controller
      */
     public function toggleStatus(Producto $producto)
     {
-        $producto->update([
-            'is_active' => !$producto->is_active
-        ]);
-        
-        $status = $producto->is_active ? 'activado' : 'desactivado';
-        
-        return redirect()->route('productos.index')
-            ->with('success', "Producto {$status} exitosamente.");
+        try {
+            DB::beginTransaction();
+            
+            $producto->update([
+                'is_active' => !$producto->is_active
+            ]);
+            
+            DB::commit();
+            
+            $status = $producto->is_active ? 'activado' : 'desactivado';
+            
+            return redirect()->route('productos.index')
+                ->with('success', "Producto {$status} exitosamente.");
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            return redirect()->route('productos.index')
+                ->with('error', 'Error al cambiar el estado del producto: ' . $e->getMessage());
+        }
     }
 
     /**

@@ -5,6 +5,7 @@ use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\FacturaController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -24,84 +25,139 @@ Route::middleware('auth')->group(function () {
 
 Route::middleware(['auth', 'user.status'])->group(function () {
     
+    // === RUTAS DE GESTIÓN DE USUARIOS (Solo Administradores) ===
+    Route::middleware('role:Administrador')->group(function () {
+        Route::get('users', [UserController::class, 'index'])->name('users.index');
+        Route::get('users/create', [UserController::class, 'create'])->name('users.create');
+        Route::post('users', [UserController::class, 'store'])->name('users.store');
+        Route::get('users/{user}', [UserController::class, 'show'])->name('users.show');
+        Route::get('users/{user}/edit', [UserController::class, 'edit'])->name('users.edit');
+        Route::put('users/{user}', [UserController::class, 'update'])->name('users.update');
+        Route::delete('users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+        Route::patch('users/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggle-status');
+    });
+    
     // === RUTAS DE CLIENTES ===
-    // Rutas de creación PRIMERO (antes de las rutas con parámetros)
-    Route::middleware('permission:create_clientes')->group(function () {
-        Route::get('clientes/create', [ClienteController::class, 'create'])->name('clientes.create');
-        Route::post('clientes', [ClienteController::class, 'store'])->name('clientes.store');
-    });
+    // IMPORTANTE: Las rutas específicas van primero (create antes que {cliente})
+    Route::get('clientes', [ClienteController::class, 'index'])
+        ->middleware('role:Administrador|Secretario|Ventas')
+        ->name('clientes.index');
     
-    Route::middleware('permission:view_clientes')->group(function () {
-        Route::get('clientes', [ClienteController::class, 'index'])->name('clientes.index');
-        Route::get('clientes/{cliente}', [ClienteController::class, 'show'])->name('clientes.show');
-    });
+    Route::get('clientes/create', [ClienteController::class, 'create'])
+        ->middleware('role:Administrador|Secretario')
+        ->name('clientes.create');
+        
+    Route::post('clientes', [ClienteController::class, 'store'])
+        ->middleware('role:Administrador|Secretario')
+        ->name('clientes.store');
     
-    Route::middleware('permission:edit_clientes')->group(function () {
-        Route::get('clientes/{cliente}/edit', [ClienteController::class, 'edit'])->name('clientes.edit');
-        Route::put('clientes/{cliente}', [ClienteController::class, 'update'])->name('clientes.update');
-        Route::patch('clientes/{cliente}/toggle-status', [ClienteController::class, 'toggleStatus'])->name('clientes.toggle-status');
-    });
+    Route::get('clientes/{cliente}', [ClienteController::class, 'show'])
+        ->middleware('role:Administrador|Secretario|Ventas')
+        ->name('clientes.show');
     
-    Route::middleware('permission:delete_clientes')->group(function () {
-        Route::delete('clientes/{cliente}', [ClienteController::class, 'destroy'])->name('clientes.destroy');
-    });
-    
-    // Gestión de roles (solo administradores)
-    Route::middleware('permission:manage_roles')->group(function () {
-        Route::get('clientes/{cliente}/roles', [ClienteController::class, 'roles'])->name('clientes.roles');
-        Route::post('clientes/{cliente}/assign-role', [ClienteController::class, 'assignRole'])->name('clientes.assign-role');
-    });
+    Route::get('clientes/{cliente}/edit', [ClienteController::class, 'edit'])
+        ->middleware('role:Administrador|Secretario')
+        ->name('clientes.edit');
+        
+    Route::put('clientes/{cliente}', [ClienteController::class, 'update'])
+        ->middleware('role:Administrador|Secretario')
+        ->name('clientes.update');
+        
+    Route::patch('clientes/{cliente}/toggle-status', [ClienteController::class, 'toggleStatus'])
+        ->middleware('role:Administrador|Secretario')
+        ->name('clientes.toggle-status');
+        
+    Route::delete('clientes/{cliente}', [ClienteController::class, 'destroy'])
+        ->middleware('role:Administrador')
+        ->name('clientes.destroy');
+        
+    Route::get('clientes/{cliente}/roles', [ClienteController::class, 'roles'])
+        ->middleware('role:Administrador')
+        ->name('clientes.roles');
+        
+    Route::post('clientes/{cliente}/assign-role', [ClienteController::class, 'assignRole'])
+        ->middleware('role:Administrador')
+        ->name('clientes.assign-role');
 
     // === RUTAS DE PRODUCTOS ===
-    // Rutas de creación y API PRIMERO
-    Route::middleware('permission:create_productos')->group(function () {
-        Route::get('productos/create', [ProductoController::class, 'create'])->name('productos.create');
-        Route::post('productos', [ProductoController::class, 'store'])->name('productos.store');
-    });
+    // IMPORTANTE: Las rutas específicas van primero (create antes que {producto})
+    Route::get('productos', [ProductoController::class, 'index'])
+        ->middleware('role:Administrador|Bodega|Secretario|Ventas')
+        ->name('productos.index');
+        
+    Route::get('productos/create', [ProductoController::class, 'create'])
+        ->middleware('role:Administrador|Bodega')
+        ->name('productos.create');
+        
+    Route::post('productos', [ProductoController::class, 'store'])
+        ->middleware('role:Administrador|Bodega')
+        ->name('productos.store');
+        
+    Route::get('api/productos/active', [ProductoController::class, 'getActiveProducts'])
+        ->middleware('role:Administrador|Bodega|Secretario|Ventas')
+        ->name('productos.api.active');
     
-    Route::middleware('permission:view_productos')->group(function () {
-        Route::get('productos', [ProductoController::class, 'index'])->name('productos.index');
-        // API para obtener productos activos
-        Route::get('api/productos/active', [ProductoController::class, 'getActiveProducts'])->name('productos.api.active');
-        Route::get('productos/{producto}', [ProductoController::class, 'show'])->name('productos.show');
-        Route::post('api/productos/{producto}/check-stock', [ProductoController::class, 'checkStock'])->name('productos.api.check-stock');
-    });
-    
-    Route::middleware('permission:edit_productos')->group(function () {
-        Route::get('productos/{producto}/edit', [ProductoController::class, 'edit'])->name('productos.edit');
-        Route::put('productos/{producto}', [ProductoController::class, 'update'])->name('productos.update');
-        Route::patch('productos/{producto}/toggle-status', [ProductoController::class, 'toggleStatus'])->name('productos.toggle-status');
-    });
-    
-    Route::middleware('permission:delete_productos')->group(function () {
-        Route::delete('productos/{producto}', [ProductoController::class, 'destroy'])->name('productos.destroy');
-    });
+    Route::get('productos/{producto}', [ProductoController::class, 'show'])
+        ->middleware('role:Administrador|Bodega|Secretario|Ventas')
+        ->name('productos.show');
+        
+    Route::get('productos/{producto}/edit', [ProductoController::class, 'edit'])
+        ->middleware('role:Administrador|Bodega')
+        ->name('productos.edit');
+        
+    Route::put('productos/{producto}', [ProductoController::class, 'update'])
+        ->middleware('role:Administrador|Bodega')
+        ->name('productos.update');
+        
+    Route::patch('productos/{producto}/toggle-status', [ProductoController::class, 'toggleStatus'])
+        ->middleware('role:Administrador|Bodega')
+        ->name('productos.toggle-status');
+        
+    Route::delete('productos/{producto}', [ProductoController::class, 'destroy'])
+        ->middleware('role:Administrador')
+        ->name('productos.destroy');
+        
+    Route::post('api/productos/{producto}/check-stock', [ProductoController::class, 'checkStock'])
+        ->middleware('role:Administrador|Bodega|Secretario|Ventas')
+        ->name('productos.api.check-stock');
 
     // === RUTAS DE FACTURAS ===
-    // Rutas de creación PRIMERO
-    Route::middleware('permission:create_facturas')->group(function () {
-        Route::get('facturas/create', [FacturaController::class, 'create'])->name('facturas.create');
-        Route::post('facturas', [FacturaController::class, 'store'])->name('facturas.store');
-    });
+    // IMPORTANTE: Las rutas específicas van primero (create antes que {factura})
+    Route::get('facturas', [FacturaController::class, 'index'])
+        ->middleware('role:Administrador|Secretario|Ventas|Bodega')
+        ->name('facturas.index');
+        
+    Route::get('facturas/create', [FacturaController::class, 'create'])
+        ->middleware('role:Administrador|Secretario|Ventas')
+        ->name('facturas.create');
+        
+    Route::post('facturas', [FacturaController::class, 'store'])
+        ->middleware('role:Administrador|Secretario|Ventas')
+        ->name('facturas.store');
     
-    Route::middleware('permission:view_facturas')->group(function () {
-        Route::get('facturas', [FacturaController::class, 'index'])->name('facturas.index');
-        Route::get('facturas/{factura}', [FacturaController::class, 'show'])->name('facturas.show');
-        Route::get('facturas/{factura}/pdf', [FacturaController::class, 'generatePDF'])->name('facturas.pdf');
-    });
-    
-    Route::middleware('permission:edit_facturas')->group(function () {
-        Route::get('facturas/{factura}/edit', [FacturaController::class, 'edit'])->name('facturas.edit');
-        Route::put('facturas/{factura}', [FacturaController::class, 'update'])->name('facturas.update');
-    });
-    
-    Route::middleware('permission:anular_facturas')->group(function () {
-        Route::patch('facturas/{factura}/anular', [FacturaController::class, 'anular'])->name('facturas.anular');
-    });
-    
-    Route::middleware('permission:delete_facturas')->group(function () {
-        Route::delete('facturas/{factura}', [FacturaController::class, 'destroy'])->name('facturas.destroy');
-    });
+    Route::get('facturas/{factura}', [FacturaController::class, 'show'])
+        ->middleware('role:Administrador|Secretario|Ventas|Bodega')
+        ->name('facturas.show');
+        
+    Route::get('facturas/{factura}/edit', [FacturaController::class, 'edit'])
+        ->middleware('role:Administrador|Secretario|Ventas')
+        ->name('facturas.edit');
+        
+    Route::put('facturas/{factura}', [FacturaController::class, 'update'])
+        ->middleware('role:Administrador|Secretario|Ventas')
+        ->name('facturas.update');
+        
+    Route::get('facturas/{factura}/pdf', [FacturaController::class, 'generatePDF'])
+        ->middleware('role:Administrador|Secretario|Ventas|Bodega')
+        ->name('facturas.pdf');
+        
+    Route::patch('facturas/{factura}/anular', [FacturaController::class, 'anular'])
+        ->middleware('role:Administrador|Secretario|Ventas')
+        ->name('facturas.anular');
+        
+    Route::delete('facturas/{factura}', [FacturaController::class, 'destroy'])
+        ->middleware('role:Administrador')
+        ->name('facturas.destroy');
 });
 
 require __DIR__.'/auth.php';

@@ -12,12 +12,7 @@ use Exception;
 
 class FacturaController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('auth');
-        $this->middleware('user.status');
-        $this->middleware('role:Ventas,Administrador');
-    }
+    // En Laravel 12, el middleware se define en las rutas, no en el constructor del controlador
 
     /**
      * Display a listing of the resource.
@@ -272,8 +267,6 @@ class FacturaController extends Controller
      */
     public function destroy(Factura $factura)
     {
-        $this->authorize('delete', $factura);
-        
         try {
             DB::beginTransaction();
             
@@ -305,8 +298,6 @@ class FacturaController extends Controller
      */
     public function anular(Factura $factura)
     {
-        $this->authorize('anular', $factura);
-        
         if ($factura->estado !== 'activa') {
             return redirect()->route('facturas.index')
                 ->with('error', 'Solo se pueden anular facturas activas.');
@@ -341,8 +332,6 @@ class FacturaController extends Controller
      */
     public function generatePDF(Factura $factura)
     {
-        $this->authorize('view', $factura);
-        
         $factura->load(['cliente', 'user', 'productos']);
         
         $pdf = Pdf::loadView('facturas.pdf', compact('factura'));

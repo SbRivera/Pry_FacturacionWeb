@@ -5,16 +5,13 @@ namespace App\Http\Controllers;
 use App\Models\Cliente;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Spatie\Permission\Models\Role;
 
 class ClienteController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('auth');
-        $this->middleware('user.status');
-    }
+    // En Laravel 12, el middleware se define en las rutas, no en el constructor del controlador
 
     /**
      * Display a listing of the resource.
@@ -47,8 +44,7 @@ class ClienteController extends Controller
      * Show the form for creating a new resource.
      */
     public function create()
-    {
-        $this->authorize('create_clientes');
+    {        
         return view('clientes.create');
     }
 
@@ -57,27 +53,35 @@ class ClienteController extends Controller
      */
     public function store(Request $request)
     {
-        $this->authorize('create_clientes');
-        
         $validated = $request->validate([
             'nombre' => 'required|string|max:255|min:2',
             'email' => 'required|email|unique:clientes,email|max:255',
             'telefono' => 'nullable|string|max:20|min:7',
         ]);
 
-        $cliente = Cliente::create($validated);
-        
-        return redirect()->route('clientes.index')
-            ->with('success', 'Cliente creado exitosamente.');
+        try {
+            DB::beginTransaction();
+            
+            $cliente = Cliente::create($validated);
+            
+            DB::commit();
+            
+            return redirect()->route('clientes.index')
+                ->with('success', 'Cliente creado exitosamente.');
+                
+        } catch (\Exception $e) {
+            DB::rollback();
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Error al crear el cliente: ' . $e->getMessage());
+        }
     }
 
     /**
      * Display the specified resource.
      */
     public function show(Cliente $cliente)
-    {
-        $this->authorize('view_clientes');
-        
+    {        
         $facturas = $cliente->facturas()
             ->with('productos')
             ->orderBy('created_at', 'desc')
@@ -90,8 +94,7 @@ class ClienteController extends Controller
      * Show the form for editing the specified resource.
      */
     public function edit(Cliente $cliente)
-    {
-        $this->authorize('edit_clientes');
+    {        
         return view('clientes.edit', compact('cliente'));
     }
 
@@ -99,9 +102,7 @@ class ClienteController extends Controller
      * Update the specified resource in storage.
      */
     public function update(Request $request, Cliente $cliente)
-    {
-        $this->authorize('edit_clientes');
-        
+    {        
         $validated = $request->validate([
             'nombre' => 'required|string|max:255|min:2',
             'email' => [
@@ -114,38 +115,57 @@ class ClienteController extends Controller
             'is_active' => 'boolean',
         ]);
 
-        $cliente->update($validated);
-        
-        return redirect()->route('clientes.index')
-            ->with('success', 'Cliente actualizado exitosamente.');
+        try {
+            DB::beginTransaction();
+            
+            $cliente->update($validated);
+            
+            DB::commit();
+            
+            return redirect()->route('clientes.index')
+                ->with('success', 'Cliente actualizado exitosamente.');
+                
+        } catch (\Exception $e) {
+            DB::rollback();
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Error al actualizar el cliente: ' . $e->getMessage());
+        }
     }
 
     /**
      * Remove the specified resource from storage.
      */
     public function destroy(Cliente $cliente)
-    {
-        $this->authorize('delete_clientes');
-        
+    {        
         // Verificar si tiene facturas activas
         if ($cliente->facturas()->where('estado', 'activa')->count() > 0) {
             return redirect()->route('clientes.index')
                 ->with('error', 'No se puede eliminar el cliente porque tiene facturas activas.');
         }
         
-        $cliente->delete();
-        
-        return redirect()->route('clientes.index')
-            ->with('success', 'Cliente eliminado exitosamente.');
+        try {
+            DB::beginTransaction();
+            
+            $cliente->delete();
+            
+            DB::commit();
+            
+            return redirect()->route('clientes.index')
+                ->with('success', 'Cliente eliminado exitosamente.');
+                
+        } catch (\Exception $e) {
+            DB::rollback();
+            return redirect()->route('clientes.index')
+                ->with('error', 'Error al eliminar el cliente: ' . $e->getMessage());
+        }
     }
 
     /**
      * Mostrar formulario para asignar roles (solo administradores)
      */
     public function roles(Cliente $cliente)
-    {
-        $this->authorize('manage_roles');
-        
+    {        
         $roles = Role::all();
         $users = User::where('is_active', true)->get();
         
@@ -156,9 +176,7 @@ class ClienteController extends Controller
      * Asignar roles a un usuario cliente
      */
     public function assignRole(Request $request, Cliente $cliente)
-    {
-        $this->authorize('manage_roles');
-        
+    {        
         $validated = $request->validate([
             'user_id' => 'required|exists:users,id',
             'roles' => 'required|array',
@@ -178,16 +196,25 @@ class ClienteController extends Controller
      * Cambiar estado del cliente
      */
     public function toggleStatus(Cliente $cliente)
-    {
-        $this->authorize('edit_clientes');
-        
-        $cliente->update([
-            'is_active' => !$cliente->is_active
-        ]);
-        
-        $status = $cliente->is_active ? 'activado' : 'desactivado';
-        
-        return redirect()->route('clientes.index')
-            ->with('success', "Cliente {$status} exitosamente.");
+    {        
+        try {
+            DB::beginTransaction();
+            
+            $cliente->update([
+                'is_active' => !$cliente->is_active
+            ]);
+            
+            DB::commit();
+            
+            $status = $cliente->is_active ? 'activado' : 'desactivado';
+            
+            return redirect()->route('clientes.index')
+                ->with('success', "Cliente {$status} exitosamente.");
+                
+        } catch (\Exception $e) {
+            DB::rollback();
+            return redirect()->route('clientes.index')
+                ->with('error', 'Error al cambiar el estado del cliente: ' . $e->getMessage());
+        }
     }
 }

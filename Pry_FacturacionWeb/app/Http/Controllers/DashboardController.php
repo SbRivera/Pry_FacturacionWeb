@@ -8,6 +8,7 @@ use App\Models\Producto;
 use App\Models\Factura;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
@@ -25,9 +26,19 @@ class DashboardController extends Controller
         if ($isAdmin) {
             // Give admin role if they don't have it
             if (!$user->hasRole('Administrador')) {
-                $adminRole = \Spatie\Permission\Models\Role::where('name', 'Administrador')->first();
-                if ($adminRole) {
-                    $user->assignRole($adminRole);
+                try {
+                    DB::beginTransaction();
+                    
+                    $adminRole = \Spatie\Permission\Models\Role::where('name', 'Administrador')->first();
+                    if ($adminRole) {
+                        $user->assignRole($adminRole);
+                    }
+                    
+                    DB::commit();
+                } catch (\Exception $e) {
+                    DB::rollBack();
+                    // Log error but continue with dashboard
+                    \Log::error('Error assigning admin role: ' . $e->getMessage());
                 }
             }
             

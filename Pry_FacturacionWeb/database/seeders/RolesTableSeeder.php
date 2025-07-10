@@ -18,12 +18,20 @@ class RolesTableSeeder extends Seeder
         // Create permissions
         $permissions = [
             'gestionar-usuarios',
-            'gestionar-clientes', 
-            'ver-clientes',
-            'gestionar-productos',
-            'ver-productos',
-            'gestionar-facturas',
-            'ver-facturas',
+            'create_clientes',
+            'view_clientes', 
+            'edit_clientes',
+            'delete_clientes',
+            'manage_roles',
+            'create_productos',
+            'view_productos',
+            'edit_productos',
+            'delete_productos',
+            'create_facturas',
+            'view_facturas',
+            'edit_facturas',
+            'anular_facturas',
+            'delete_facturas',
             'gestionar-reportes',
             'ver-reportes',
         ];
@@ -38,27 +46,31 @@ class RolesTableSeeder extends Seeder
 
         $secretarioRole = Role::firstOrCreate(['name' => 'Secretario']);
         $secretarioRole->givePermissionTo([
-            'gestionar-clientes', 
-            'ver-clientes',
-            'gestionar-facturas',
-            'ver-facturas',
-            'ver-productos',
+            'create_clientes',
+            'view_clientes', 
+            'edit_clientes',
+            'create_facturas',
+            'view_facturas',
+            'edit_facturas',
+            'view_productos',
             'ver-reportes'
         ]);
 
         $bodegaRole = Role::firstOrCreate(['name' => 'Bodega']);
         $bodegaRole->givePermissionTo([
-            'gestionar-productos',
-            'ver-productos',
-            'ver-facturas'
+            'create_productos',
+            'view_productos',
+            'edit_productos',
+            'view_facturas'
         ]);
 
         $ventasRole = Role::firstOrCreate(['name' => 'Ventas']);
         $ventasRole->givePermissionTo([
-            'ver-clientes',
-            'gestionar-facturas',
-            'ver-facturas',
-            'ver-productos',
+            'view_clientes',
+            'create_facturas',
+            'view_facturas',
+            'edit_facturas',
+            'view_productos',
             'ver-reportes'
         ]);
     }

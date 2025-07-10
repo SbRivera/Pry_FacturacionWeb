@@ -28,11 +28,6 @@
                         <a href="{{ route('login') }}" class="text-cyan-300 hover:text-cyan-200 font-medium transition-colors duration-200">
                             Iniciar Sesión
                         </a>
-                        @if (Route::has('register'))
-                            <a href="{{ route('register') }}" class="bg-cyan-600 hover:bg-cyan-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200">
-                                Registrarse
-                            </a>
-                        @endif
                     @endauth
                 </div>
             </div>
@@ -65,6 +60,16 @@
                         </a>
                     @endauth
                 </div>
+                @guest
+                <div class="mt-6 text-center">
+                    <p class="text-cyan-200 text-sm bg-blue-900/50 backdrop-blur-sm rounded-lg px-4 py-2 inline-block">
+                        <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        ¿Necesitas acceso? Contacta al administrador del sistema para obtener tus credenciales
+                    </p>
+                </div>
+                @endguest
             </div>
         </div>
     </section>
@@ -134,7 +139,7 @@
                     </p>
                 </div>
                 
-                <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <!-- Administrador -->
                     <div class="bg-blue-700/60 backdrop-blur-sm rounded-xl p-6 text-center hover:bg-blue-600/60 transition-colors duration-300">
                         <div class="text-yellow-400 mb-3">
@@ -143,44 +148,32 @@
                             </svg>
                         </div>
                         <h3 class="text-lg font-semibold text-cyan-300 mb-2">Administrador</h3>
-                        <p class="text-sm text-cyan-200 mb-3">admin@test.com</p>
-                        <p class="text-sm text-cyan-200">password</p>
+                        <p class="text-sm text-cyan-200 mb-3">admin@empresa.com</p>
+                        <p class="text-sm text-cyan-200">admin123</p>
                     </div>
 
-                    <!-- Secretario -->
+                    <!-- Usuario Demo -->
                     <div class="bg-blue-700/60 backdrop-blur-sm rounded-xl p-6 text-center hover:bg-blue-600/60 transition-colors duration-300">
                         <div class="text-green-400 mb-3">
-                            <svg class="w-8 h-8 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
-                            </svg>
-                        </div>
-                        <h3 class="text-lg font-semibold text-cyan-300 mb-2">Secretario</h3>
-                        <p class="text-sm text-cyan-200 mb-3">secretario@test.com</p>
-                        <p class="text-sm text-cyan-200">password</p>
-                    </div>
-
-                    <!-- Bodega -->
-                    <div class="bg-blue-700/60 backdrop-blur-sm rounded-xl p-6 text-center hover:bg-blue-600/60 transition-colors duration-300">
-                        <div class="text-purple-400 mb-3">
-                            <svg class="w-8 h-8 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
-                            </svg>
-                        </div>
-                        <h3 class="text-lg font-semibold text-cyan-300 mb-2">Bodega</h3>
-                        <p class="text-sm text-cyan-200 mb-3">bodega@test.com</p>
-                        <p class="text-sm text-cyan-200">password</p>
-                    </div>
-
-                    <!-- Ventas -->
-                    <div class="bg-blue-700/60 backdrop-blur-sm rounded-xl p-6 text-center hover:bg-blue-600/60 transition-colors duration-300">
-                        <div class="text-pink-400 mb-3">
                             <svg class="w-8 h-8 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
                             </svg>
                         </div>
-                        <h3 class="text-lg font-semibold text-cyan-300 mb-2">Ventas</h3>
-                        <p class="text-sm text-cyan-200 mb-3">ventas@test.com</p>
-                        <p class="text-sm text-cyan-200">password</p>
+                        <h3 class="text-lg font-semibold text-cyan-300 mb-2">Usuario Demo (Ventas)</h3>
+                        <p class="text-sm text-cyan-200 mb-3">demo@facturacion.com</p>
+                        <p class="text-sm text-cyan-200">demo123</p>
+                    </div>
+
+                    <!-- Nota -->
+                    <div class="bg-blue-700/60 backdrop-blur-sm rounded-xl p-6 text-center hover:bg-blue-600/60 transition-colors duration-300">
+                        <div class="text-cyan-400 mb-3">
+                            <svg class="w-8 h-8 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-semibold text-cyan-300 mb-2">Otros Usuarios</h3>
+                        <p class="text-sm text-cyan-200 mb-3">Solo el administrador</p>
+                        <p class="text-sm text-cyan-200">puede crear usuarios</p>
                     </div>
                 </div>
                 
