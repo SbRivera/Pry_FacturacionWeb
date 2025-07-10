@@ -3,16 +3,63 @@
 namespace App\Http\Controllers;
 
 use App\Models\Factura;
+use App\Models\Cliente;
+use App\Models\Producto;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Exception;
 
 class FacturaController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth');
+        $this->middleware('user.status');
+        $this->middleware('role:Ventas,Administrador');
+    }
+
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
+        $query = Factura::with(['cliente', 'user', 'productos']);
+        
+        // Filtro de búsqueda
+        if ($request->has('search') && $request->search) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('numero_factura', 'like', "%{$search}%")
+                  ->orWhereHas('cliente', function($clienteQuery) use ($search) {
+                      $clienteQuery->where('nombre', 'like', "%{$search}%")
+                                  ->orWhere('email', 'like', "%{$search}%");
+                  });
+            });
+        }
+        
+        // Filtro de estado
+        if ($request->has('estado') && $request->estado) {
+            $query->where('estado', $request->estado);
+        }
+        
+        // Filtro de fecha
+        if ($request->has('fecha_desde') && $request->fecha_desde) {
+            $query->whereDate('created_at', '>=', $request->fecha_desde);
+        }
+        
+        if ($request->has('fecha_hasta') && $request->fecha_hasta) {
+            $query->whereDate('created_at', '<=', $request->fecha_hasta);
+        }
+        
+        // Solo mostrar facturas propias si no es administrador
+        if (!auth()->user()->hasRole('Administrador')) {
+            $query->where('user_id', auth()->id());
+        }
+        
+        $facturas = $query->orderBy('created_at', 'desc')->paginate(10);
+        
+        return view('facturas.index', compact('facturas'));
     }
 
     /**
@@ -20,48 +67,85 @@ class FacturaController extends Controller
      */
     public function create()
     {
-        //
+        $clientes = Cliente::where('is_active', true)->orderBy('nombre')->get();
+        $productos = Producto::where('is_active', true)
+                            ->where('stock', '>', 0)
+                            ->orderBy('nombre')
+                            ->get();
+                            
+        return view('facturas.create', compact('clientes', 'productos'));
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreFacturaRequest $req)
+    public function store(Request $request)
     {
-        DB::transaction(function() use($req){
-            $factura = Factura::create([
-                'user_id'    => auth()->id(),
-                'cliente_id' => $req->cliente_id,
-                'total'      => 0,
-            ]);
+        $validated = $request->validate([
+            'cliente_id' => 'required|exists:clientes,id',
+            'productos' => 'required|array|min:1',
+            'productos.*.id' => 'required|exists:productos,id',
+            'productos.*.cantidad' => 'required|integer|min:1',
+        ]);
+
+        try {
+            DB::beginTransaction();
+            
             $total = 0;
-            foreach($req->productos as $item){
-                $prod = Producto::lockForUpdate()->find($item['id']);
-                $prod->decrement('stock', $item['cantidad']);
-                $factura->productos()->attach($prod->id, [
-                    'cantidad'       => $item['cantidad'],
-                    'precio_unitario'=> $prod->precio
+            $productosParaFactura = [];
+            
+            // Validar stock y calcular total
+            foreach ($validated['productos'] as $productoData) {
+                $producto = Producto::findOrFail($productoData['id']);
+                $cantidad = $productoData['cantidad'];
+                
+                // Verificar stock disponible
+                if ($producto->stock < $cantidad) {
+                    throw new Exception("Stock insuficiente para {$producto->nombre}. Stock disponible: {$producto->stock}");
+                }
+                
+                $subtotal = $producto->precio * $cantidad;
+                $total += $subtotal;
+                
+                $productosParaFactura[] = [
+                    'producto' => $producto,
+                    'cantidad' => $cantidad,
+                    'precio_unitario' => $producto->precio,
+                    'subtotal' => $subtotal
+                ];
+            }
+            
+            // Crear la factura
+            $factura = Factura::create([
+                'user_id' => auth()->id(),
+                'cliente_id' => $validated['cliente_id'],
+                'total' => $total,
+                'estado' => 'activa'
+            ]);
+            
+            // Asociar productos y descontar stock
+            foreach ($productosParaFactura as $item) {
+                $factura->productos()->attach($item['producto']->id, [
+                    'cantidad' => $item['cantidad'],
+                    'precio_unitario' => $item['precio_unitario']
                 ]);
-                $total += $prod->precio * $item['cantidad'];
+                
+                // Descontar stock
+                $item['producto']->decrement('stock', $item['cantidad']);
             }
-            $factura->update(['total'=>$total]);
-        });
-
-        return redirect()->route('facturas.index')->with('success','Factura creada');
-    }
-
-    public function anular(Factura $factura)
-    {
-        $this->authorize('anular', $factura);
-
-        DB::transaction(function() use($factura){
-            foreach($factura->productos as $prod){
-                $prod->increment('stock', $prod->pivot->cantidad);
-            }
-            $factura->update(['estado'=>'anulada']);
-        });
-
-        return back()->with('success','Factura anulada');
+            
+            DB::commit();
+            
+            return redirect()->route('facturas.show', $factura)
+                ->with('success', 'Factura creada exitosamente.');
+                
+        } catch (Exception $e) {
+            DB::rollBack();
+            
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Error al crear la factura: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -69,7 +153,11 @@ class FacturaController extends Controller
      */
     public function show(Factura $factura)
     {
-        //
+        $this->authorize('view', $factura);
+        
+        $factura->load(['cliente', 'user', 'productos']);
+        
+        return view('facturas.show', compact('factura'));
     }
 
     /**
@@ -77,7 +165,20 @@ class FacturaController extends Controller
      */
     public function edit(Factura $factura)
     {
-        //
+        $this->authorize('update', $factura);
+        
+        // Solo se pueden editar facturas activas
+        if ($factura->estado !== 'activa') {
+            return redirect()->route('facturas.index')
+                ->with('error', 'Solo se pueden editar facturas activas.');
+        }
+        
+        $clientes = Cliente::where('is_active', true)->orderBy('nombre')->get();
+        $productos = Producto::where('is_active', true)->orderBy('nombre')->get();
+        
+        $factura->load(['cliente', 'productos']);
+        
+        return view('facturas.edit', compact('factura', 'clientes', 'productos'));
     }
 
     /**
@@ -85,7 +186,85 @@ class FacturaController extends Controller
      */
     public function update(Request $request, Factura $factura)
     {
-        //
+        $this->authorize('update', $factura);
+        
+        // Solo se pueden editar facturas activas
+        if ($factura->estado !== 'activa') {
+            return redirect()->route('facturas.index')
+                ->with('error', 'Solo se pueden editar facturas activas.');
+        }
+
+        $validated = $request->validate([
+            'cliente_id' => 'required|exists:clientes,id',
+            'productos' => 'required|array|min:1',
+            'productos.*.id' => 'required|exists:productos,id',
+            'productos.*.cantidad' => 'required|integer|min:1',
+        ]);
+
+        try {
+            DB::beginTransaction();
+            
+            // Restaurar stock de productos originales
+            foreach ($factura->productos as $producto) {
+                $producto->increment('stock', $producto->pivot->cantidad);
+            }
+            
+            // Eliminar productos asociados
+            $factura->productos()->detach();
+            
+            $total = 0;
+            $productosParaFactura = [];
+            
+            // Validar stock y calcular nuevo total
+            foreach ($validated['productos'] as $productoData) {
+                $producto = Producto::findOrFail($productoData['id']);
+                $cantidad = $productoData['cantidad'];
+                
+                // Verificar stock disponible
+                if ($producto->stock < $cantidad) {
+                    throw new Exception("Stock insuficiente para {$producto->nombre}. Stock disponible: {$producto->stock}");
+                }
+                
+                $subtotal = $producto->precio * $cantidad;
+                $total += $subtotal;
+                
+                $productosParaFactura[] = [
+                    'producto' => $producto,
+                    'cantidad' => $cantidad,
+                    'precio_unitario' => $producto->precio,
+                    'subtotal' => $subtotal
+                ];
+            }
+            
+            // Actualizar la factura
+            $factura->update([
+                'cliente_id' => $validated['cliente_id'],
+                'total' => $total
+            ]);
+            
+            // Asociar nuevos productos y descontar stock
+            foreach ($productosParaFactura as $item) {
+                $factura->productos()->attach($item['producto']->id, [
+                    'cantidad' => $item['cantidad'],
+                    'precio_unitario' => $item['precio_unitario']
+                ]);
+                
+                // Descontar stock
+                $item['producto']->decrement('stock', $item['cantidad']);
+            }
+            
+            DB::commit();
+            
+            return redirect()->route('facturas.show', $factura)
+                ->with('success', 'Factura actualizada exitosamente.');
+                
+        } catch (Exception $e) {
+            DB::rollBack();
+            
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Error al actualizar la factura: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -93,6 +272,81 @@ class FacturaController extends Controller
      */
     public function destroy(Factura $factura)
     {
-        //
+        $this->authorize('delete', $factura);
+        
+        try {
+            DB::beginTransaction();
+            
+            // Restaurar stock si la factura estaba activa
+            if ($factura->estado === 'activa') {
+                foreach ($factura->productos as $producto) {
+                    $producto->increment('stock', $producto->pivot->cantidad);
+                }
+            }
+            
+            // Eliminar la factura
+            $factura->delete();
+            
+            DB::commit();
+            
+            return redirect()->route('facturas.index')
+                ->with('success', 'Factura eliminada exitosamente.');
+                
+        } catch (Exception $e) {
+            DB::rollBack();
+            
+            return redirect()->route('facturas.index')
+                ->with('error', 'Error al eliminar la factura: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Anular una factura
+     */
+    public function anular(Factura $factura)
+    {
+        $this->authorize('anular', $factura);
+        
+        if ($factura->estado !== 'activa') {
+            return redirect()->route('facturas.index')
+                ->with('error', 'Solo se pueden anular facturas activas.');
+        }
+
+        try {
+            DB::beginTransaction();
+            
+            // Restaurar stock de productos
+            foreach ($factura->productos as $producto) {
+                $producto->increment('stock', $producto->pivot->cantidad);
+            }
+            
+            // Cambiar estado a anulada
+            $factura->update(['estado' => 'anulada']);
+            
+            DB::commit();
+            
+            return redirect()->route('facturas.show', $factura)
+                ->with('success', 'Factura anulada exitosamente. El stock ha sido restaurado.');
+                
+        } catch (Exception $e) {
+            DB::rollBack();
+            
+            return redirect()->route('facturas.show', $factura)
+                ->with('error', 'Error al anular la factura: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Generar PDF de la factura
+     */
+    public function generatePDF(Factura $factura)
+    {
+        $this->authorize('view', $factura);
+        
+        $factura->load(['cliente', 'user', 'productos']);
+        
+        $pdf = Pdf::loadView('facturas.pdf', compact('factura'));
+        
+        return $pdf->download("factura-{$factura->numero_factura}.pdf");
     }
 }
