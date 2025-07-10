@@ -1,20 +1,22 @@
 <?php
 
-namespace Database\Seeders;
-
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+use App\Models\User;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
-use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
 
-class RolesTableSeeder extends Seeder
+return new class extends Migration
 {
-    
-    public function run()
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
     {
         // Reset cached roles and permissions
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
-
+        
         // Create permissions
         $permissions = [
             'gestionar-usuarios',
@@ -32,10 +34,11 @@ class RolesTableSeeder extends Seeder
             Permission::firstOrCreate(['name' => $permission]);
         }
 
-        // Create roles and assign permissions
+        // Create admin role with all permissions
         $adminRole = Role::firstOrCreate(['name' => 'Administrador']);
-        $adminRole->givePermissionTo($permissions); // Admin has all permissions
+        $adminRole->syncPermissions($permissions);
 
+        // Create other roles
         $secretarioRole = Role::firstOrCreate(['name' => 'Secretario']);
         $secretarioRole->givePermissionTo([
             'gestionar-clientes', 
@@ -61,5 +64,39 @@ class RolesTableSeeder extends Seeder
             'ver-productos',
             'ver-reportes'
         ]);
+
+        // Assign admin role to admin users
+        $adminEmails = ['admin@empresa.com', 'admin@facturacion.com'];
+        foreach ($adminEmails as $email) {
+            $user = User::where('email', $email)->first();
+            if ($user && !$user->hasRole('Administrador')) {
+                $user->assignRole($adminRole);
+                echo "Admin role assigned to {$user->email}\n";
+            }
+        }
     }
-}
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        // Remove roles and permissions
+        Role::where('name', 'Administrador')->delete();
+        Role::where('name', 'Secretario')->delete();
+        Role::where('name', 'Bodega')->delete();
+        Role::where('name', 'Ventas')->delete();
+        
+        Permission::whereIn('name', [
+            'gestionar-usuarios',
+            'gestionar-clientes', 
+            'ver-clientes',
+            'gestionar-productos',
+            'ver-productos',
+            'gestionar-facturas',
+            'ver-facturas',
+            'gestionar-reportes',
+            'ver-reportes',
+        ])->delete();
+    }
+};
