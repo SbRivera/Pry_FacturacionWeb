@@ -197,7 +197,7 @@
                         Cancelar
                     </a>
                     
-                    <a 
+                    {{-- <a 
                         href="{{ route('clientes.show', $cliente) }}" 
                         class="inline-flex items-center px-6 py-3 border border-blue-300 text-blue-700 rounded-xl hover:bg-blue-50 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 font-medium"
                     >
@@ -206,7 +206,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                         </svg>
                         Ver Cliente
-                    </a>
+                    </a> --}}
                 </div>
 
                 <button 

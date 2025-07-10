@@ -131,7 +131,7 @@
                 <div class="flex items-center space-x-4">
                     <div>
                         <label for="estado-filter" class="block text-sm font-medium text-gray-700">Estado</label>
-                        <select id="estado-filter" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
+                        <select id="estado-filter" class="text-gray-700 mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
                             <option value="">Todos</option>
                             <option value="activa">Activas</option>
                             <option value="anulada">Anuladas</option>

@@ -35,7 +35,7 @@
                         </div>
                     </div>
 
-                    <!-- Total Facturas -->
+                    {{-- <!-- Total Facturas -->
                     <div class="bg-green-50 dark:bg-green-900/20 p-6 rounded-lg border border-green-200 dark:border-green-800">
                         <div class="flex items-center">
                             <div class="p-3 rounded-full bg-green-500 text-white">
@@ -52,9 +52,9 @@
                                 </p>
                             </div>
                         </div>
-                    </div>
+                    </div> --}}
 
-                    <!-- Ventas Hoy -->
+                    {{-- <!-- Ventas Hoy -->
                     <div class="bg-purple-50 dark:bg-purple-900/20 p-6 rounded-lg border border-purple-200 dark:border-purple-800">
                         <div class="flex items-center">
                             <div class="p-3 rounded-full bg-purple-500 text-white">
@@ -72,7 +72,7 @@
                             </div>
                         </div>
                     </div>
-                </div>
+                </div> --}}
 
                 <!-- Accesos Rápidos -->
                 <div class="bg-gray-50 dark:bg-gray-700 p-6 rounded-lg">
@@ -95,7 +95,7 @@
                         </a>
                         @endcan
 
-                        @can('view_facturas')
+                        {{-- @can('view_facturas')
                         <a href="{{ route('facturas.index') }}" 
                            class="flex items-center p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
                             <div class="p-2 bg-green-100 dark:bg-green-900 rounded-lg">
@@ -123,7 +123,7 @@
                                 <p class="text-sm text-gray-500 dark:text-gray-400">Crear factura</p>
                             </div>
                         </a>
-                        @endcan
+                        @endcan --}}
                     </div>
                 </div>
             </div>

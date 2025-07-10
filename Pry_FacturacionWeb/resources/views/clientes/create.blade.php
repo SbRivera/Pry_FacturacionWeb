@@ -41,7 +41,7 @@
                                    id="nombre"
                                    value="{{ old('nombre') }}"
                                    required
-                                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm @error('nombre') border-red-300 @enderror"
+                                   class="text-gray-700 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm @error('nombre') border-red-300 @enderror"
                                    placeholder="Ej: Juan Pérez García">
                             @error('nombre')
                                 <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
@@ -58,7 +58,7 @@
                                    id="email"
                                    value="{{ old('email') }}"
                                    required
-                                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm @error('email') border-red-300 @enderror"
+                                   class="text-gray-700 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm @error('email') border-red-300 @enderror"
                                    placeholder="Ej: juan@email.com">
                             @error('email')
                                 <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
@@ -74,7 +74,7 @@
                                    name="telefono" 
                                    id="telefono"
                                    value="{{ old('telefono') }}"
-                                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm @error('telefono') border-red-300 @enderror"
+                                   class="text-gray-700 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm @error('telefono') border-red-300 @enderror"
                                    placeholder="Ej: +1 234 567 890">
                             @error('telefono')
                                 <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
