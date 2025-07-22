@@ -177,7 +177,7 @@ Route::get('/', function () {
 
 // Dashboard principal con control de roles
 Route::get('/dashboard', [DashboardController::class, 'index'])
-    ->middleware(['auth', 'verified', 'user.status'])
+    ->middleware(['auth', 'verified.admin', 'user.status'])
     ->name('dashboard');
 
 Route::middleware('auth')->group(function () {

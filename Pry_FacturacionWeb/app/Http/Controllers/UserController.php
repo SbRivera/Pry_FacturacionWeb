@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rules;
@@ -17,7 +18,7 @@ class UserController extends Controller
     public function index()
     {
         // Verificar que sea administrador
-        if (!auth()->user()->hasRole('Administrador')) {
+        if (!Auth::user()->hasRole('Administrador')) {
             abort(403, 'No tienes permisos para gestionar usuarios.');
         }
         
@@ -32,7 +33,7 @@ class UserController extends Controller
     public function create()
     {
         // Verificar que sea administrador
-        if (!auth()->user()->hasRole('Administrador')) {
+        if (!Auth::user()->hasRole('Administrador')) {
             abort(403, 'No tienes permisos para crear usuarios.');
         }
         
@@ -47,7 +48,7 @@ class UserController extends Controller
     public function store(Request $request)
     {
         // Verificar que sea administrador
-        if (!auth()->user()->hasRole('Administrador')) {
+        if (!Auth::user()->hasRole('Administrador')) {
             abort(403, 'No tienes permisos para crear usuarios.');
         }
 
@@ -73,6 +74,12 @@ class UserController extends Controller
             $role = Role::findById($request->role);
             $user->assignRole($role);
 
+            // Si el rol asignado es Administrador, marcar el email como verificado automáticamente
+            if ($role->name === 'Administrador') {
+                $user->email_verified_at = now();
+                $user->save();
+            }
+
             DB::commit();
 
             return redirect()->route('users.index')
@@ -92,7 +99,7 @@ class UserController extends Controller
     public function show(User $user)
     {
         // Verificar que sea administrador
-        if (!auth()->user()->hasRole('Administrador')) {
+        if (!Auth::user()->hasRole('Administrador')) {
             abort(403, 'No tienes permisos para ver usuarios.');
         }
         
@@ -105,7 +112,7 @@ class UserController extends Controller
     public function edit(User $user)
     {
         // Verificar que sea administrador
-        if (!auth()->user()->hasRole('Administrador')) {
+        if (!Auth::user()->hasRole('Administrador')) {
             abort(403, 'No tienes permisos para editar usuarios.');
         }
         
@@ -120,7 +127,7 @@ class UserController extends Controller
     public function update(Request $request, User $user)
     {
         // Verificar que sea administrador
-        if (!auth()->user()->hasRole('Administrador')) {
+        if (!Auth::user()->hasRole('Administrador')) {
             abort(403, 'No tienes permisos para actualizar usuarios.');
         }
 
@@ -171,12 +178,12 @@ class UserController extends Controller
     public function destroy(User $user)
     {
         // Verificar que sea administrador
-        if (!auth()->user()->hasRole('Administrador')) {
+        if (!Auth::user()->hasRole('Administrador')) {
             abort(403, 'No tienes permisos para eliminar usuarios.');
         }
 
         // No permitir eliminar al propio usuario
-        if ($user->id === auth()->id()) {
+        if ($user->id === Auth::id()) {
             return redirect()->route('users.index')
                 ->with('error', 'No puedes eliminar tu propia cuenta.');
         }
@@ -213,12 +220,12 @@ class UserController extends Controller
     public function toggleStatus(User $user)
     {
         // Verificar que sea administrador
-        if (!auth()->user()->hasRole('Administrador')) {
+        if (!Auth::user()->hasRole('Administrador')) {
             abort(403, 'No tienes permisos para cambiar el estado de usuarios.');
         }
 
         // No permitir desactivar al propio usuario
-        if ($user->id === auth()->id()) {
+        if ($user->id === Auth::id()) {
             return redirect()->route('users.index')
                 ->with('error', 'No puedes desactivar tu propia cuenta.');
         }
@@ -244,3 +251,5 @@ class UserController extends Controller
         }
     }
 }
+
+

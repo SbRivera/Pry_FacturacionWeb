@@ -162,7 +162,12 @@ class FacturaController extends Controller
 
             // Enviar factura por correo
             try {
-                Mail::to($factura->cliente->email)->send(new \App\Mail\FacturaCreada($factura));
+                /** @var \App\Models\Cliente $cliente */
+                $cliente = $factura->cliente;
+                $clienteEmail = $cliente->email;
+                if ($clienteEmail) {
+                    Mail::to($clienteEmail)->send(new \App\Mail\FacturaCreada($factura));
+                }
             } catch (\Exception $e) {
                 // Loguea pero no detiene la ejecución
                 Log::error("No se pudo enviar la factura por email: " . $e->getMessage());
@@ -238,7 +243,9 @@ class FacturaController extends Controller
 
             // Restaurar stock de productos originales
             foreach ($factura->productos as $producto) {
-                $producto->increment('stock', $producto->pivot->cantidad);
+                /** @var \App\Models\Producto $producto */
+                $cantidad = $producto->pivot->cantidad ?? 0;
+                $producto->increment('stock', $cantidad);
             }
 
             // Eliminar productos asociados
@@ -309,7 +316,9 @@ class FacturaController extends Controller
             // Restaurar stock si la factura estaba activa
             if ($factura->estado === 'activa') {
                 foreach ($factura->productos as $producto) {
-                    $producto->increment('stock', $producto->pivot->cantidad);
+                    /** @var \App\Models\Producto $producto */
+                    $cantidad = $producto->pivot->cantidad ?? 0;
+                    $producto->increment('stock', $cantidad);
                 }
             }
 
@@ -343,7 +352,9 @@ class FacturaController extends Controller
 
             // Restaurar stock de productos
             foreach ($factura->productos as $producto) {
-                $producto->increment('stock', $producto->pivot->cantidad);
+                /** @var \App\Models\Producto $producto */
+                $cantidad = $producto->pivot->cantidad ?? 0;
+                $producto->increment('stock', $cantidad);
             }
 
             // Cambiar estado a anulada

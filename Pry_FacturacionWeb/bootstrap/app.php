@@ -20,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => \App\Http\Middleware\CheckRole::class,
             'user.status' => \App\Http\Middleware\CheckUserStatus::class,
+            'verified.admin' => \App\Http\Middleware\EnsureEmailIsVerifiedOrAdmin::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

@@ -87,7 +87,7 @@ class ClienteController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(5);
             
-        return view('clientes.show', compact('cliente', 'facturas'));
+        return view('clientes.show', ['cliente' => $cliente, 'facturas' => $facturas]);
     }
 
     /**
@@ -169,7 +169,7 @@ class ClienteController extends Controller
         $roles = Role::all();
         $users = User::where('is_active', true)->get();
         
-        return view('clientes.roles', compact('cliente', 'roles', 'users'));
+        return view('clientes.roles', ['cliente' => $cliente, 'roles' => $roles, 'users' => $users]);
     }
 
     /**

@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Factura extends Model
@@ -25,7 +27,7 @@ class Factura extends Model
     /**
      * Relación con el usuario que creó la factura
      */
-    public function user()
+    public function user():BelongsTo
     {
         return $this->belongsTo(User::class);
     }
@@ -33,7 +35,7 @@ class Factura extends Model
     /**
      * Relación con el cliente
      */
-    public function cliente()
+    public function cliente():BelongsTo
     {
         return $this->belongsTo(Cliente::class);
     }
@@ -41,7 +43,7 @@ class Factura extends Model
     /**
      * Relación con productos (many-to-many)
      */
-    public function productos()
+    public function productos():BelongsToMany
     {
         return $this->belongsToMany(Producto::class, 'factura_producto')
                     ->withPivot('cantidad', 'precio_unitario')
@@ -74,7 +76,7 @@ class Factura extends Model
         static::creating(function ($factura) {
             if (empty($factura->numero_factura)) {
                 $factura->numero_factura = 'FAC-' . str_pad(
-                    static::count() + 1, 
+                    (string)(static::count() + 1), 
                     6, 
                     '0', 
                     STR_PAD_LEFT
