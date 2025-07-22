@@ -2,13 +2,26 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class User extends Authenticatable
+/**
+ * @property int $id
+ * @property string $name
+ * @property string $email
+ * @property \Illuminate\Support\Carbon|null $email_verified_at
+ * @property string $password
+ * @property bool $is_active
+ * @property string|null $remember_token
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Factura> $facturas
+ */
+class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable, HasRoles;
@@ -41,7 +54,7 @@ class User extends Authenticatable
     /**
      * Relación con facturas creadas
      */
-    public function facturas()
+    public function facturas(): HasMany
     {
         return $this->hasMany(Factura::class);
     }

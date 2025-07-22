@@ -5,7 +5,23 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
+/**
+ * @property int $id
+ * @property int $user_id
+ * @property int $cliente_id
+ * @property string $numero_factura
+ * @property float $total
+ * @property string $estado
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property-read \App\Models\User $user
+ * @property-read \App\Models\Cliente $cliente
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Producto> $productos
+ */
 class Factura extends Model
 {
     use HasFactory, SoftDeletes;
@@ -25,7 +41,7 @@ class Factura extends Model
     /**
      * Relación con el usuario que creó la factura
      */
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
@@ -33,7 +49,7 @@ class Factura extends Model
     /**
      * Relación con el cliente
      */
-    public function cliente()
+    public function cliente(): BelongsTo
     {
         return $this->belongsTo(Cliente::class);
     }
@@ -41,7 +57,7 @@ class Factura extends Model
     /**
      * Relación con productos (many-to-many)
      */
-    public function productos()
+    public function productos(): BelongsToMany
     {
         return $this->belongsToMany(Producto::class, 'factura_producto')
                     ->withPivot('cantidad', 'precio_unitario')
@@ -74,7 +90,7 @@ class Factura extends Model
         static::creating(function ($factura) {
             if (empty($factura->numero_factura)) {
                 $factura->numero_factura = 'FAC-' . str_pad(
-                    static::count() + 1, 
+                    (string)(static::count() + 1), 
                     6, 
                     '0', 
                     STR_PAD_LEFT

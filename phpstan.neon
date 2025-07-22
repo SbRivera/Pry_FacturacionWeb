@@ -6,3 +6,9 @@ parameters:
 
     paths:
         - resources/views/
+        - app
+    
+    ignoreErrors:
+        # Ignore view-string type issues for Laravel views
+        - '#Parameter \#1 \$view of function view expects view-string\|null, string given\.#'
+    
