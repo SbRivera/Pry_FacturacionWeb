@@ -9,6 +9,7 @@ use App\Models\Factura;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class DashboardController extends Controller
 {
@@ -67,7 +68,27 @@ class DashboardController extends Controller
             $ventasDiarias = $this->getVentasDiarias();
             $topProductos = $this->getTopProductos();
             
-            return view('dashboard.admin', compact('stats', 'ventasDiarias', 'topProductos'));
+            // Lista de usuarios para el formulario de tokens
+            $usuarios = User::where('is_active', true)->orderBy('name')->get();
+            
+            // Lista de tokens existentes con información del usuario
+            $tokens = DB::table('personal_access_tokens')
+                ->join('users', 'personal_access_tokens.tokenable_id', '=', 'users.id')
+                ->select(
+                    'personal_access_tokens.id',
+                    'personal_access_tokens.name',
+                    'personal_access_tokens.abilities',
+                    'personal_access_tokens.token',
+                    'personal_access_tokens.created_at',
+                    'personal_access_tokens.last_used_at',
+                    'users.name as user_name',
+                    'users.email as user_email'
+                )
+                ->where('personal_access_tokens.tokenable_type', 'App\\Models\\User')
+                ->orderBy('personal_access_tokens.created_at', 'desc')
+                ->get();
+            
+            return view('dashboard.admin', compact('stats', 'ventasDiarias', 'topProductos', 'usuarios', 'tokens'));
             
         } elseif ($user->hasRole(['Secretario'])) {
             $stats = [
@@ -113,8 +134,15 @@ class DashboardController extends Controller
             return view('dashboard.ventas', compact('stats'));
         }
         
-        // Dashboard por defecto
-        return view('dashboard.default');
+        // Dashboard por defecto - agregar datos básicos
+        $users = User::where('is_active', true)->orderBy('name')->get();
+        $stats = [
+            'mensaje' => 'Dashboard básico',
+            'user_name' => $user->name,
+            'user_role' => $user->roles->pluck('name')->first() ?? 'Sin rol asignado'
+        ];
+        
+        return view('dashboard.default', compact('users', 'stats'));
     }
     
     private function getVentasDiarias()
@@ -139,5 +167,216 @@ class DashboardController extends Controller
             ->orderBy('total_vendido', 'desc')
             ->limit(5)
             ->get();
+    }
+    
+    /**
+     * Generar token para un usuario específico
+     */
+    public function generateToken(Request $request)
+    {
+        // Verificar que solo administradores puedan generar tokens
+        if (!auth()->user()->hasRole('Administrador')) {
+            return redirect()->route('dashboard')
+                ->with('error', 'No tienes permisos para generar tokens.');
+        }
+        
+        $validated = $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'token_name' => 'required|string|max:255',
+            'abilities' => 'array',
+            'abilities.*' => 'string'
+        ]);
+        
+        try {
+            $user = User::findOrFail($validated['user_id']);
+            
+            // Definir habilidades disponibles
+            $defaultAbilities = ['read', 'create', 'update'];
+            $abilities = $validated['abilities'] ?? $defaultAbilities;
+            
+            // Generar el token
+            $token = $user->createToken($validated['token_name'], $abilities);
+            
+            return redirect()->route('dashboard')
+                ->with('success', 'Token generado exitosamente.')
+                ->with('token', $token->plainTextToken)
+                ->with('token_name', $validated['token_name'])
+                ->with('user_name', $user->name);
+                
+        } catch (\Exception $e) {
+            return redirect()->route('dashboard')
+                ->with('error', 'Error al generar el token: ' . $e->getMessage());
+        }
+    }
+    
+    /**
+     * Revocar tokens de un usuario
+     */
+    public function revokeTokens(Request $request)
+    {
+        // Verificar que solo administradores puedan revocar tokens
+        if (!auth()->user()->hasRole('Administrador')) {
+            return redirect()->route('dashboard')
+                ->with('error', 'No tienes permisos para revocar tokens.');
+        }
+        
+        $validated = $request->validate([
+            'user_id' => 'required|exists:users,id'
+        ]);
+        
+        try {
+            $user = User::findOrFail($validated['user_id']);
+            
+            // Revocar todos los tokens del usuario
+            $user->tokens()->delete();
+            
+            return redirect()->route('dashboard')
+                ->with('success', "Todos los tokens de {$user->name} han sido revocados.");
+                
+        } catch (\Exception $e) {
+            return redirect()->route('dashboard')
+                ->with('error', 'Error al revocar los tokens: ' . $e->getMessage());
+        }
+    }
+    
+    /**
+     * Revocar un token específico
+     */
+    public function revokeSpecificToken(Request $request)
+    {
+        // Verificar que solo administradores puedan revocar tokens
+        if (!auth()->user()->hasRole('Administrador')) {
+            return redirect()->route('dashboard')
+                ->with('error', 'No tienes permisos para revocar tokens.');
+        }
+        
+        $validated = $request->validate([
+            'token_id' => 'required|exists:personal_access_tokens,id'
+        ]);
+        
+        try {
+            // Obtener información del token antes de eliminarlo
+            $tokenInfo = DB::table('personal_access_tokens')
+                ->join('users', 'personal_access_tokens.tokenable_id', '=', 'users.id')
+                ->select('personal_access_tokens.name', 'users.name as user_name')
+                ->where('personal_access_tokens.id', $validated['token_id'])
+                ->first();
+            
+            // Eliminar el token específico
+            DB::table('personal_access_tokens')
+                ->where('id', $validated['token_id'])
+                ->delete();
+            
+            return redirect()->route('dashboard')
+                ->with('success', "Token '{$tokenInfo->name}' de {$tokenInfo->user_name} ha sido revocado exitosamente.");
+                
+        } catch (\Exception $e) {
+            return redirect()->route('dashboard')
+                ->with('error', 'Error al revocar el token: ' . $e->getMessage());
+        }
+    }
+    
+    /**
+     * Regenerar un token específico
+     */
+    public function regenerateToken(Request $request)
+    {
+        // Verificar que solo administradores puedan regenerar tokens
+        if (!auth()->user()->hasRole('Administrador')) {
+            return redirect()->route('dashboard')
+                ->with('error', 'No tienes permisos para regenerar tokens.');
+        }
+        
+        $validated = $request->validate([
+            'token_id' => 'required|exists:personal_access_tokens,id'
+        ]);
+        
+        try {
+            // Obtener información del token antes de eliminarlo
+            $oldTokenInfo = DB::table('personal_access_tokens')
+                ->join('users', 'personal_access_tokens.tokenable_id', '=', 'users.id')
+                ->select(
+                    'personal_access_tokens.name',
+                    'personal_access_tokens.abilities',
+                    'personal_access_tokens.tokenable_id',
+                    'users.name as user_name'
+                )
+                ->where('personal_access_tokens.id', $validated['token_id'])
+                ->first();
+                
+            if (!$oldTokenInfo) {
+                return redirect()->route('dashboard')
+                    ->with('error', 'Token no encontrado.');
+            }
+            
+            // Eliminar el token anterior
+            DB::table('personal_access_tokens')
+                ->where('id', $validated['token_id'])
+                ->delete();
+                
+            // Obtener el usuario
+            $user = User::findOrFail($oldTokenInfo->tokenable_id);
+            
+            // Decodificar las habilidades
+            $abilities = json_decode($oldTokenInfo->abilities, true) ?? ['read'];
+            
+            // Crear el nuevo token con las mismas características
+            $newToken = $user->createToken($oldTokenInfo->name, $abilities);
+            
+            return redirect()->route('dashboard')
+                ->with('success', "Token '{$oldTokenInfo->name}' regenerado exitosamente.")
+                ->with('token', $newToken->plainTextToken)
+                ->with('token_name', $oldTokenInfo->name)
+                ->with('user_name', $oldTokenInfo->user_name);
+                
+        } catch (\Exception $e) {
+            return redirect()->route('dashboard')
+                ->with('error', 'Error al regenerar el token: ' . $e->getMessage());
+        }
+    }
+    
+    /**
+     * Mostrar información detallada de un token específico
+     */
+    public function showToken(Request $request)
+    {
+        // Verificar que solo administradores puedan ver tokens
+        if (!auth()->user()->hasRole('Administrador')) {
+            return response()->json(['error' => 'No tienes permisos para ver tokens.'], 403);
+        }
+        
+        $validated = $request->validate([
+            'token_id' => 'required|exists:personal_access_tokens,id'
+        ]);
+        
+        try {
+            // Obtener información completa del token
+            $tokenInfo = DB::table('personal_access_tokens')
+                ->join('users', 'personal_access_tokens.tokenable_id', '=', 'users.id')
+                ->select(
+                    'personal_access_tokens.id',
+                    'personal_access_tokens.name',
+                    'personal_access_tokens.abilities',
+                    'personal_access_tokens.token',
+                    'personal_access_tokens.created_at',
+                    'personal_access_tokens.last_used_at',
+                    'users.name as user_name',
+                    'users.email as user_email'
+                )
+                ->where('personal_access_tokens.id', $validated['token_id'])
+                ->first();
+                
+            if (!$tokenInfo) {
+                return response()->json(['error' => 'Token no encontrado.'], 404);
+            }
+            
+            return response()->json([
+                'success' => true,
+                'token' => $tokenInfo
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Error al obtener el token: ' . $e->getMessage()], 500);
+        }
     }
 }

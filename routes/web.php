@@ -180,6 +180,20 @@ Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified', 'user.status'])
     ->name('dashboard');
 
+// Rutas para gestión de tokens (solo administradores con middleware específico)
+Route::middleware(['auth', 'verified', 'user.status', 'admin'])->group(function () {
+    Route::post('/dashboard/generate-token', [DashboardController::class, 'generateToken'])
+        ->name('dashboard.generate-token');
+    Route::post('/dashboard/revoke-tokens', [DashboardController::class, 'revokeTokens'])
+        ->name('dashboard.revoke-tokens');
+    Route::post('/dashboard/revoke-specific-token', [DashboardController::class, 'revokeSpecificToken'])
+        ->name('dashboard.revoke-specific-token');
+    Route::post('/dashboard/regenerate-token', [DashboardController::class, 'regenerateToken'])
+        ->name('dashboard.regenerate-token');
+    Route::post('/dashboard/show-token', [DashboardController::class, 'showToken'])
+        ->name('dashboard.show-token');
+});
+
 Route::middleware('auth')->group(function () {
     Route::get('/profile',   [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -198,6 +212,14 @@ Route::middleware(['auth', 'user.status'])->group(function () {
         Route::put('users/{user}', [UserController::class, 'update'])->name('users.update');
         Route::delete('users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
         Route::patch('users/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggle-status');
+        
+        // === RUTAS DE TOKENS DE USUARIO (Protección extra) ===
+        Route::middleware('admin')->group(function () {
+            Route::post('users/generate-token', [UserController::class, 'generateToken'])->name('users.generate-token');
+            Route::post('users/revoke-tokens', [UserController::class, 'revokeTokens'])->name('users.revoke-tokens');
+            Route::get('users/{user}/tokens', [UserController::class, 'showTokens'])->name('users.tokens');
+            Route::delete('users/{user}/tokens/{token_id}', [UserController::class, 'revokeSpecificToken'])->name('users.revoke-token');
+        });
     });
     
     // === RUTAS DE CLIENTES ===

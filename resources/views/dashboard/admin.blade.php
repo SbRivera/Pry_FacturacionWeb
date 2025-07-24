@@ -282,6 +282,537 @@
                 </div>
             </div>
         </div>
+
+        <!-- Gestión de Tokens API -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <!-- Generar Token -->
+            <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                    <svg class="h-5 w-5 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-3.586l4.293-4.293A6 6 0 0119 9z"></path>
+                    </svg>
+                    Generar Token API
+                </h3>
+                
+                <form action="{{ route('dashboard.generate-token') }}" method="POST" class="space-y-4">
+                    @csrf
+                    
+                    <div>
+                        <label for="user_id" class="block text-sm font-medium text-gray-700 mb-2">Seleccionar Usuario</label>
+                        <select name="user_id" id="user_id" required 
+                                class="w-full px-3 py-2 border text-black border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">Seleccione un usuario...</option>
+                            @foreach($usuarios as $usuario)
+                                <option value="{{ $usuario->id }}">{{ $usuario->name }} ({{ $usuario->email }})</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="token_name" class="block text-sm font-medium text-gray-700 mb-2">Nombre del Token</label>
+                        <input type="text" name="token_name" id="token_name" required 
+                               placeholder="Ej: Token para aplicación móvil"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900 placeholder-gray-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Permisos del Token</label>
+                        <div class="space-y-2">
+                            <label class="flex items-center">
+                                <input type="checkbox" name="abilities[]" value="read" checked 
+                                       class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                <span class="ml-2 text-sm text-gray-700">Lectura (read)</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" name="abilities[]" value="create" 
+                                       class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                <span class="ml-2 text-sm text-gray-700">Crear (create)</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" name="abilities[]" value="update" 
+                                       class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                <span class="ml-2 text-sm text-gray-700">Actualizar (update)</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" name="abilities[]" value="delete" 
+                                       class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                <span class="ml-2 text-sm text-gray-700">Eliminar (delete)</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <button type="submit" 
+                            class="w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors duration-200 font-medium">
+                        <svg class="inline h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                        </svg>
+                        Generar Token
+                    </button>
+                </form>
+            </div>
+
+            <!-- Revocar Tokens -->
+            <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                    <svg class="h-5 w-5 text-red-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                    </svg>
+                    Revocar Tokens
+                </h3>
+                
+                <form action="{{ route('dashboard.revoke-tokens') }}" method="POST" class="space-y-4">
+                    @csrf
+                    
+                    <div>
+                        <label for="revoke_user_id" class="block text-sm font-medium text-gray-700 mb-2">Seleccionar Usuario</label>
+                        <select name="user_id" id="revoke_user_id" required 
+                                class="w-full px-3 py-2 border text-black border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500">
+                            <option value="">Seleccione un usuario...</option>
+                            @foreach($usuarios as $usuario)
+                                <option value="{{ $usuario->id }}">{{ $usuario->name }} ({{ $usuario->email }})</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                        <div class="flex">
+                            <svg class="h-5 w-5 text-red-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                            </svg>
+                            <div class="ml-3">
+                                <h4 class="text-sm font-medium text-red-800">¡Atención!</h4>
+                                <p class="text-sm text-red-700 mt-1">Esta acción revocará TODOS los tokens del usuario seleccionado. Esta acción no se puede deshacer.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" 
+                            onclick="return confirm('¿Estás seguro de que quieres revocar todos los tokens de este usuario? Esta acción no se puede deshacer.')"
+                            class="w-full bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors duration-200 font-medium">
+                        <svg class="inline h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                        </svg>
+                        Revocar Todos los Tokens
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Tabla de Tokens Existentes -->
+        <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-200 mb-8">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <svg class="h-5 w-5 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                Tokens API Existentes
+            </h3>
+            
+            @if(isset($tokens) && $tokens->count() > 0)
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Usuario
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Nombre del Token
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Permisos
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Creado
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Último Uso
+                                </th>
+                                {{-- <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Estado
+                                </th> --}}
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Acciones
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            @foreach($tokens as $token)
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <div class="flex-shrink-0 h-8 w-8">
+                                            <div class="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
+                                                <span class="text-sm font-medium text-blue-800">
+                                                    {{ substr($token->user_name, 0, 1) }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="ml-3">
+                                            <div class="text-sm font-medium text-gray-900">{{ $token->user_name }}</div>
+                                            <div class="text-sm text-gray-500">{{ $token->user_email }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-gray-900">{{ $token->name }}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-gray-900">
+                                        @php
+                                            $abilities = json_decode($token->abilities, true) ?? [];
+                                        @endphp
+                                        @if(empty($abilities) || in_array('*', $abilities))
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                Todos los permisos
+                                            </span>
+                                        @else
+                                            @foreach($abilities as $ability)
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mr-1 mb-1">
+                                                    {{ $ability }}
+                                                </span>
+                                            @endforeach
+                                        @endif
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {{ \Carbon\Carbon::parse($token->created_at)->format('d/m/Y H:i') }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    @if($token->last_used_at)
+                                        {{ \Carbon\Carbon::parse($token->last_used_at)->format('d/m/Y H:i') }}
+                                    @else
+                                        <span class="text-gray-400">Nunca usado</span>
+                                    @endif
+                                </td>
+                                {{-- <td class="px-6 py-4 whitespace-nowrap">
+                                    @if($token->last_used_at && \Carbon\Carbon::parse($token->last_used_at)->gt(\Carbon\Carbon::now()->subDays(7)))
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                            Activo
+                                        </span>
+                                    @elseif($token->last_used_at)
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                            Inactivo
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                            Sin usar
+                                        </span>
+                                    @endif
+                                </td> --}}
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <div class="flex items-center space-x-2">
+                                        <!-- Botón Ver Token -->
+                                        <button onclick="showTokenDetails('{{ $token->id }}', '{{ $token->name }}', '{{ $token->user_name }}', '{{ addslashes(json_encode($abilities)) }}', 'hidden_for_security')" 
+                                                class="text-blue-600 hover:text-blue-900 transition-colors duration-200 p-1" 
+                                                title="Ver detalles del token">
+                                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                            </svg>
+                                        </button>
+                                        
+                                        <!-- Botón Regenerar Token -->
+                                        <form action="{{ route('dashboard.regenerate-token') }}" method="POST" class="inline">
+                                            @csrf
+                                            <input type="hidden" name="token_id" value="{{ $token->id }}">
+                                            <button type="submit" 
+                                                    class="text-green-600 hover:text-green-900 transition-colors duration-200 p-1"
+                                                    title="Regenerar token">
+                                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                                </svg>
+                                            </button>
+                                        </form>
+                                        
+                                        <!-- Botón Revocar Token -->
+                                        <form action="{{ route('dashboard.revoke-specific-token') }}" method="POST" class="inline">
+                                            @csrf
+                                            <input type="hidden" name="token_id" value="{{ $token->id }}">
+                                            <button type="submit" 
+                                                    onclick="return confirm('¿Estás seguro de que quieres revocar este token? Esta acción no se puede deshacer.')"
+                                                    class="text-red-600 hover:text-red-900 transition-colors duration-200 p-1"
+                                                    title="Revocar token">
+                                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                                </svg>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @else
+                <div class="text-center py-8">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-3.586l4.293-4.293A6 6 0 0119 9z"></path>
+                    </svg>
+                    <h3 class="mt-2 text-sm font-medium text-gray-900">No hay tokens generados</h3>
+                    <p class="mt-1 text-sm text-gray-500">Genera tu primer token API usando el formulario de arriba.</p>
+                </div>
+            @endif
+        </div>
+
+        <!-- Modal para mostrar el token generado -->
+        @if(session('token'))
+        <div id="tokenModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+            <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-2/3 lg:w-1/2 shadow-lg rounded-md bg-white">
+                <div class="mt-3 text-black">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                            <svg class="h-6 w-6 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            Token Generado Exitosamente
+                        </h3>
+                        <button onclick="closeTokenModal()" class="text-gray-400 hover:text-gray-600">
+                            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <p class="text-sm text-gray-900 mb-2">
+                            <strong>Usuario:</strong> {{ session('user_name') }}<br>
+                            <strong>Nombre del Token:</strong> {{ session('token_name') }}
+                        </p>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-900 mb-2">Token de Acceso:</label>
+                        <div class="relative">
+                            <input type="text" id="tokenValue" value="{{ session('token') }}" readonly 
+                                   class="w-full px-3 py-2 pr-20 border border-gray-300 rounded-lg bg-gray-50 text-gray-900 text-sm font-mono">
+                            <button onclick="copyToken()" 
+                                    class="absolute right-2 top-1/2 transform -translate-y-1/2 bg-blue-600 text-white px-3 py-1 rounded text-xs hover:bg-blue-700">
+                                Copiar
+                            </button>
+                        </div>
+                    </div>
+                    
+                    
+                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                        <div class="flex">
+                            <svg class="h-5 w-5 text-yellow-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                            </svg>
+                            <div class="ml-3">
+                                <h4 class="text-sm font-medium text-yellow-800">¡Importante!</h4>
+                                <p class="text-sm text-yellow-700 mt-1">
+                                    Asegúrate de copiarlo y guardarlo en un lugar seguro. 
+                                    No podrás verlo nuevamente.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-end">
+                        <button onclick="closeTokenModal()" 
+                                class="bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700 transition-colors duration-200">
+                            Cerrar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endif
+
+        <!-- Modal para mostrar detalles del token -->
+        <div id="tokenDetailsModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+            <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-2/3 lg:w-1/2 shadow-lg rounded-md bg-white">
+                <div class="mt-3 text-black">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                            <svg class="h-6 w-6 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                            </svg>
+                            Detalles del Token
+                        </h3>
+                        <button onclick="closeTokenDetailsModal()" class="text-gray-400 hover:text-gray-600">
+                            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    
+                    <div id="tokenDetailsContent">
+                    </div>
+                    
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                        <div class="flex">
+                            <svg class="h-5 w-5 text-green-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <div class="ml-3">
+                                <h4 class="text-sm font-medium text-green-800">Información de Seguridad</h4>
+                                <p class="text-sm text-green-700 mt-1">
+                                    Como administrador, puedes ver la información del token y regenerarlo si es necesario.
+                                    El token completo solo se muestra una vez durante la generación por razones de seguridad.
+                                </p>
+                                <p class="text-sm text-green-700 mt-1">
+                                    <strong>Si necesitas el token completo:</strong> usa el botón "Regenerar" en la tabla de tokens.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-end">
+                        <button onclick="closeTokenDetailsModal()" 
+                                class="bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700 transition-colors duration-200">
+                            Cerrar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 </div>
+
+<script>
+function copyToken() {
+    const tokenInput = document.getElementById('tokenValue');
+    tokenInput.select();
+    tokenInput.setSelectionRange(0, 99999);
+    document.execCommand('copy');
+    
+    // Mostrar feedback visual
+    const button = event.target;
+    const originalText = button.textContent;
+    button.textContent = '¡Copiado!';
+    button.classList.add('bg-green-600');
+    button.classList.remove('bg-blue-600');
+    
+    setTimeout(() => {
+        button.textContent = originalText;
+        button.classList.remove('bg-green-600');
+        button.classList.add('bg-blue-600');
+    }, 2000);
+}
+
+function closeTokenModal() {
+    document.getElementById('tokenModal').style.display = 'none';
+}
+
+function showTokenDetails(tokenId, tokenName, userName, abilities, tokenHash) {
+    const modal = document.getElementById('tokenDetailsModal');
+    const content = document.getElementById('tokenDetailsContent');
+    
+    // Parsear abilities si es un string JSON
+    let parsedAbilities;
+    try {
+        parsedAbilities = typeof abilities === 'string' ? JSON.parse(abilities) : abilities;
+    } catch (e) {
+        parsedAbilities = [];
+    }
+    
+    // Crear el contenido del modal
+    let abilitiesHtml = '';
+    if (parsedAbilities.length === 0 || parsedAbilities.includes('*')) {
+        abilitiesHtml = '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Todos los permisos</span>';
+    } else {
+        parsedAbilities.forEach(ability => {
+            abilitiesHtml += `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mr-1 mb-1">${ability}</span>`;
+        });
+    }
+    
+    // Verificar si tenemos el token real o solo información
+    const isTokenHidden = tokenHash === 'hidden_for_security';
+    
+    content.innerHTML = `
+        <div class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Usuario:</label>
+                    <p class="text-sm text-gray-900 bg-gray-50 p-2 rounded">${userName}</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Nombre del Token:</label>
+                    <p class="text-sm text-gray-900 bg-gray-50 p-2 rounded">${tokenName}</p>
+                </div>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Token de Acceso:</label>
+                ${isTokenHidden ? `
+                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <div class="flex">
+                        <svg class="h-5 w-5 text-yellow-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                        </svg>
+                        <div class="ml-3">
+                            <h4 class="text-sm font-medium text-yellow-800">Token no disponible por seguridad</h4>
+                            <p class="text-sm text-yellow-700 mt-1">
+                                Por razones de seguridad, el token completo no se almacena y solo se muestra una vez durante la generación.
+                            </p>
+                            <p class="text-sm text-yellow-700 mt-1">
+                                <strong>Opciones:</strong>
+                            </p>
+                            <ul class="text-sm text-yellow-700 mt-1 ml-4 list-disc">
+                                <li>Usar el token que guardaste cuando se generó</li>
+                                <li>Regenerar el token usando el botón correspondiente</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                ` : `
+                <div class="space-y-2">
+                    <input type="text" id="tokenDetailsValue" value="${tokenHash}" readonly 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-900 text-sm font-mono">
+                    <button onclick="copyTokenDetails()" 
+                            class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors duration-200 text-sm font-medium">
+                        <svg class="inline h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                        </svg>
+                        Copiar Token
+                    </button>
+                </div>
+                `}
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Permisos Asignados:</label>
+                <div class="bg-gray-50 p-3 rounded">
+                    ${abilitiesHtml}
+                </div>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">ID del Token:</label>
+                <p class="text-sm text-gray-500 bg-gray-50 p-2 rounded font-mono">${tokenId}</p>
+            </div>
+        </div>
+    `;
+    
+    modal.classList.remove('hidden');
+}
+
+function closeTokenDetailsModal() {
+    document.getElementById('tokenDetailsModal').classList.add('hidden');
+}
+
+function copyTokenDetails() {
+    const tokenInput = document.getElementById('tokenDetailsValue');
+    tokenInput.select();
+    tokenInput.setSelectionRange(0, 99999);
+    document.execCommand('copy');
+    
+    // Mostrar feedback visual
+    const button = event.target;
+    const originalText = button.textContent;
+    button.textContent = '¡Copiado!';
+    button.classList.add('bg-green-600');
+    button.classList.remove('bg-blue-600');
+    
+    setTimeout(() => {
+        button.textContent = originalText;
+        button.classList.remove('bg-green-600');
+        button.classList.add('bg-blue-600');
+    }, 2000);
+}
+</script>
 @endsection

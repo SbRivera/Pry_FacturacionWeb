@@ -243,4 +243,131 @@ class UserController extends Controller
                 ->with('error', 'Error al cambiar el estado del usuario: ' . $e->getMessage());
         }
     }
+    
+    /**
+     * Generar token de acceso para un usuario
+     */
+    public function generateToken(Request $request)
+    {
+        // Verificar que sea administrador
+        if (!auth()->user()->hasRole('Administrador')) {
+            return response()->json(['error' => 'No tienes permisos para generar tokens.'], 403);
+        }
+        
+        $validated = $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'token_name' => 'required|string|max:255',
+            'abilities' => 'array',
+            'abilities.*' => 'string'
+        ]);
+        
+        try {
+            $user = User::findOrFail($validated['user_id']);
+            
+            // Verificar que el usuario esté activo
+            if (!$user->is_active) {
+                return redirect()->back()
+                    ->with('error', 'No se puede generar un token para un usuario inactivo.');
+            }
+            
+            // Definir habilidades disponibles
+            $defaultAbilities = ['read', 'create', 'update'];
+            $abilities = $validated['abilities'] ?? $defaultAbilities;
+            
+            // Generar el token
+            $token = $user->createToken($validated['token_name'], $abilities);
+            
+            return redirect()->back()
+                ->with('success', 'Token generado exitosamente.')
+                ->with('token', $token->plainTextToken)
+                ->with('token_name', $validated['token_name'])
+                ->with('user_name', $user->name);
+                
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->with('error', 'Error al generar el token: ' . $e->getMessage());
+        }
+    }
+    
+    /**
+     * Revocar todos los tokens de un usuario
+     */
+    public function revokeTokens(Request $request)
+    {
+        // Verificar que sea administrador
+        if (!auth()->user()->hasRole('Administrador')) {
+            return response()->json(['error' => 'No tienes permisos para revocar tokens.'], 403);
+        }
+        
+        $validated = $request->validate([
+            'user_id' => 'required|exists:users,id'
+        ]);
+        
+        try {
+            $user = User::findOrFail($validated['user_id']);
+            
+            // Contar tokens antes de revocar
+            $tokenCount = $user->tokens()->count();
+            
+            // Revocar todos los tokens del usuario
+            $user->tokens()->delete();
+            
+            return redirect()->back()
+                ->with('success', "Se revocaron {$tokenCount} tokens de {$user->name}.");
+                
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->with('error', 'Error al revocar los tokens: ' . $e->getMessage());
+        }
+    }
+    
+    /**
+     * Mostrar tokens de un usuario
+     */
+    public function showTokens(User $user)
+    {
+        // Verificar que sea administrador
+        if (!auth()->user()->hasRole('Administrador')) {
+            abort(403, 'No tienes permisos para ver tokens de usuarios.');
+        }
+        
+        // Obtener información de tokens (sin el token actual por seguridad)
+        $tokens = $user->tokens()->select('id', 'name', 'abilities', 'created_at', 'last_used_at')->get();
+        
+        return view('users.tokens', compact('user', 'tokens'));
+    }
+    
+    /**
+     * Revocar un token específico
+     */
+    public function revokeSpecificToken(Request $request, User $user)
+    {
+        // Verificar que sea administrador
+        if (!auth()->user()->hasRole('Administrador')) {
+            return response()->json(['error' => 'No tienes permisos para revocar tokens.'], 403);
+        }
+        
+        $validated = $request->validate([
+            'token_id' => 'required|exists:personal_access_tokens,id'
+        ]);
+        
+        try {
+            $token = $user->tokens()->where('id', $validated['token_id'])->first();
+            
+            if (!$token) {
+                return redirect()->back()
+                    ->with('error', 'Token no encontrado o no pertenece a este usuario.');
+            }
+            
+            $tokenName = $token->name;
+            $token->delete();
+            
+            return redirect()->back()
+                ->with('success', "Token '{$tokenName}' revocado exitosamente.");
+                
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->with('error', 'Error al revocar el token: ' . $e->getMessage());
+        }
+    }
 }
