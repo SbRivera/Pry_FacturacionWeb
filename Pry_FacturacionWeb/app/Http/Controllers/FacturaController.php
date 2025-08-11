@@ -141,7 +141,7 @@ class FacturaController extends Controller
                 'user_id' => auth()->id(),
                 'cliente_id' => $validated['cliente_id'],
                 'total' => $total,
-                'estado' => 'activa'
+                'estado' => 'pendiente' // Cambiar estado por defecto a pendiente
             ]);
 
             // Asociar productos y descontar stock

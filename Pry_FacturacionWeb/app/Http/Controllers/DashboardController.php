@@ -66,8 +66,8 @@ class DashboardController extends Controller
             // Gráficos adicionales para admin
             $ventasDiarias = $this->getVentasDiarias();
             $topProductos = $this->getTopProductos();
-            
-            return view('dashboard.admin', compact('stats', 'ventasDiarias', 'topProductos'));
+            $users=User::all();
+            return view('dashboard.admin', compact('stats', 'ventasDiarias', 'topProductos','users'));
             
         } elseif ($user->hasRole(['Secretario'])) {
             $stats = [

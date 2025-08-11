@@ -57,7 +57,9 @@
                             ['route' => 'clientes.index', 'icon' => 'M5.121 17.804...M15 11a3 3 0 11-6 0 3 3 0 016 0z', 'label' => 'Clientes'],
                             ['route' => 'productos.index', 'icon' => 'M20 13V7a2...M12 22V11', 'label' => 'Productos'],
                             ['route' => 'facturas.index', 'icon' => 'M9 17v-2...M5 15h14', 'label' => 'Facturas'],
+                            ['route' => 'pagos.index', 'icon' => 'M12 8c-1.657...M17 20h5a2 2 0 002-2v-4h-5', 'label' => 'Pagos', 'roles' => ['Administrador', 'Pagos']],
                         ] as $item)
+                        @if(!isset($item['roles']) || auth()->user()->hasAnyRole($item['roles']))
                         <li>
                             <a href="{{ route($item['route']) }}"
                                class="flex items-center px-4 py-2 rounded-md hover:bg-cyan-700 transition">
@@ -68,6 +70,7 @@
                                 <span class="ml-3">{{ $item['label'] }}</span>
                             </a>
                         </li>
+                        @endif
                         @endforeach
 
                         <!-- Logout -->
@@ -225,6 +228,18 @@
                         </li>
                         @endrole
 
+                        @role('Administrador|Pagos')
+                        <li>
+                            <a href="{{ route('pagos.index') }}"
+                               class="flex items-center px-4 py-2 rounded-md hover:bg-cyan-700 transition">
+                                <svg class="h-6 w-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                                </svg>
+                                <span class="ml-3">Pagos</span>
+                            </a>
+                        </li>
+                        @endrole
+
                         @role('Administrador')
                         <li>
                             <a href="{{ route('users.index') }}"
@@ -282,9 +297,19 @@
                 </div>
             </nav>
 
+            <!-- Page Header (if provided) -->
+            @isset($header)
+            <header class="bg-white dark:bg-gray-800 shadow">
+                <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+                    {{ $header }}
+                </div>
+            </header>
+            @endisset
+
             <!-- Yield Content -->
             <main class="p-6">
                 @yield('content')
+                {{ $slot ?? '' }}
             </main>
         </div>
     </div>

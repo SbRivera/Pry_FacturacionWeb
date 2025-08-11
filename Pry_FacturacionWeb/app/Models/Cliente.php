@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Cliente extends Model
@@ -15,7 +16,8 @@ class Cliente extends Model
         'nombre',
         'email', 
         'telefono',
-        'is_active'
+        'is_active',
+        'user_id'
     ];
 
     protected $casts = [
@@ -28,6 +30,14 @@ class Cliente extends Model
     public function facturas():HasMany
     {
         return $this->hasMany(Factura::class);
+    }
+
+    /**
+     * Relación con usuario (cliente)
+     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 
     /**

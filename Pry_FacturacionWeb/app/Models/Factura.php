@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Factura extends Model
@@ -51,6 +52,14 @@ class Factura extends Model
     }
 
     /**
+     * Relación con pagos
+     */
+    public function pagos(): HasMany
+    {
+        return $this->hasMany(Pago::class);
+    }
+
+    /**
      * Scope para facturas activas
      */
     public function scopeActive($query)
@@ -67,6 +76,22 @@ class Factura extends Model
     }
 
     /**
+     * Scope para facturas pendientes de pago
+     */
+    public function scopePendientes($query)
+    {
+        return $query->where('estado', 'pendiente');
+    }
+
+    /**
+     * Scope para facturas pagadas
+     */
+    public function scopePagadas($query)
+    {
+        return $query->where('estado', 'pagada');
+    }
+
+    /**
      * Boot method para generar número de factura automáticamente
      */
     protected static function boot()
@@ -75,8 +100,12 @@ class Factura extends Model
 
         static::creating(function ($factura) {
             if (empty($factura->numero_factura)) {
+                // Obtener el último número de factura para generar secuencial
+                $ultimaFactura = static::orderBy('id', 'desc')->first();
+                $siguienteNumero = $ultimaFactura ? ($ultimaFactura->id + 1) : 1;
+                
                 $factura->numero_factura = 'FAC-' . str_pad(
-                    (string)(static::count() + 1), 
+                    (string)$siguienteNumero, 
                     6, 
                     '0', 
                     STR_PAD_LEFT

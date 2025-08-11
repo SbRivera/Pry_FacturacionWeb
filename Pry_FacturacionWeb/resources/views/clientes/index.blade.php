@@ -23,6 +23,8 @@
                                 <th class="px-4 py-3 text-left text-sm font-semibold">Nombre</th>
                                 <th class="px-4 py-3 text-left text-sm font-semibold">Email</th>
                                 <th class="px-4 py-3 text-left text-sm font-semibold">Teléfono</th>
+                                <th class="px-4 py-3 text-left text-sm font-semibold">Usuario</th>
+                                <th class="px-4 py-3 text-left text-sm font-semibold">Estado</th>
                                 <th class="px-4 py-3 text-left text-sm font-semibold">Acciones</th>
                             </tr>
                         </thead>
@@ -31,21 +33,63 @@
                                 <tr>
                                     <td class="px-4 py-2">{{ $cliente->nombre }}</td>
                                     <td class="px-4 py-2">{{ $cliente->email }}</td>
-                                    <td class="px-4 py-2">{{ $cliente->telefono }}</td>
+                                    <td class="px-4 py-2">{{ $cliente->telefono ?: 'N/A' }}</td>
+                                    <td class="px-4 py-2">
+                                        @if($cliente->user)
+                                            <div class="flex items-center">
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                    ✓ Usuario creado
+                                                </span>
+                                            </div>
+                                        @else
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                                ⚠ Sin usuario
+                                            </span>
+                                        @endif
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <div class="flex items-center space-x-2">
+                                            @if($cliente->is_active)
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                    Activo
+                                                </span>
+                                            @else
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                                    Inactivo
+                                                </span>
+                                            @endif
+                                            
+                                            <form action="{{ route('clientes.toggle-status', $cliente) }}" method="POST" class="inline">
+                                                @csrf
+                                                @method('PATCH')
+                                                <button type="submit" 
+                                                        class="text-xs {{ $cliente->is_active ? 'text-red-600 hover:text-red-800' : 'text-green-600 hover:text-green-800' }} underline"
+                                                        onclick="return confirm('¿Estás seguro de {{ $cliente->is_active ? 'desactivar' : 'activar' }} este cliente?')">
+                                                    {{ $cliente->is_active ? 'Desactivar' : 'Activar' }}
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
                                     <td class="px-4 py-2 space-x-2">
+                                        <a href="{{ route('clientes.show', $cliente) }}" 
+                                           class="text-gray-600 hover:underline dark:text-gray-400">Ver</a>
                                         <a href="{{ route('clientes.edit', $cliente) }}" 
                                            class="text-blue-600 hover:underline dark:text-blue-400">Editar</a>
                                         <form action="{{ route('clientes.destroy', $cliente) }}" method="POST" class="inline">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="text-red-600 hover:underline dark:text-red-400">Eliminar</button>
+                                            <button type="submit" 
+                                                    class="text-red-600 hover:underline dark:text-red-400"
+                                                    onclick="return confirm('¿Estás seguro de eliminar este cliente? El usuario asociado será desactivado.')">
+                                                Eliminar
+                                            </button>
                                         </form>
                                     </td>
                                 </tr>
                             @endforeach
                             @if($clientes->isEmpty())
                                 <tr>
-                                    <td colspan="4" class="px-4 py-4 text-center text-gray-500 dark:text-gray-400">
+                                    <td colspan="6" class="px-4 py-4 text-center text-gray-500 dark:text-gray-400">
                                         No hay clientes registrados.
                                     </td>
                                 </tr>

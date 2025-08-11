@@ -18,7 +18,7 @@ class ClienteController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Cliente::with('facturas');
+        $query = Cliente::with(['facturas', 'user']);
         
         // Filtro de búsqueda
         if ($request->has('search') && $request->search) {
@@ -55,19 +55,38 @@ class ClienteController extends Controller
     {
         $validated = $request->validate([
             'nombre' => 'required|string|max:255|min:2',
-            'email' => 'required|email|unique:clientes,email|max:255',
+            'email' => 'required|email|unique:clientes,email|unique:users,email|max:255',
             'telefono' => 'nullable|string|max:20|min:7',
+            'password' => 'required|string|min:8|confirmed',
         ]);
 
         try {
             DB::beginTransaction();
             
-            $cliente = Cliente::create($validated);
+            // 1. Crear el usuario con rol Cliente
+            $user = User::create([
+                'name' => $validated['nombre'],
+                'email' => $validated['email'],
+                'password' => bcrypt($validated['password']),
+                'is_active' => true,
+            ]);
+            
+            // 2. Asignar rol Cliente
+            $user->assignRole('Cliente');
+            
+            // 3. Crear el cliente y vincularlo con el usuario
+            $cliente = Cliente::create([
+                'nombre' => $validated['nombre'],
+                'email' => $validated['email'],
+                'telefono' => $validated['telefono'],
+                'user_id' => $user->id,
+                'is_active' => true,
+            ]);
             
             DB::commit();
             
             return redirect()->route('clientes.index')
-                ->with('success', 'Cliente creado exitosamente.');
+                ->with('success', 'Cliente y usuario creados exitosamente. El cliente puede acceder al sistema con su email y contraseña.');
                 
         } catch (\Exception $e) {
             DB::rollback();
@@ -109,7 +128,8 @@ class ClienteController extends Controller
                 'required',
                 'email',
                 'max:255',
-                Rule::unique('clientes')->ignore($cliente->id)
+                Rule::unique('clientes')->ignore($cliente->id),
+                Rule::unique('users')->ignore($cliente->user_id ?? null)
             ],
             'telefono' => 'nullable|string|max:20|min:7',
             'is_active' => 'boolean',
@@ -118,7 +138,17 @@ class ClienteController extends Controller
         try {
             DB::beginTransaction();
             
+            // Actualizar el cliente
             $cliente->update($validated);
+            
+            // Si el cliente tiene un usuario asociado, actualizar también sus datos
+            if ($cliente->user) {
+                $cliente->user->update([
+                    'name' => $validated['nombre'],
+                    'email' => $validated['email'],
+                    'is_active' => $validated['is_active'] ?? $cliente->is_active,
+                ]);
+            }
             
             DB::commit();
             
@@ -147,12 +177,17 @@ class ClienteController extends Controller
         try {
             DB::beginTransaction();
             
+            // Si el cliente tiene un usuario asociado, desactivarlo
+            if ($cliente->user) {
+                $cliente->user->update(['is_active' => false]);
+            }
+            
             $cliente->delete();
             
             DB::commit();
             
             return redirect()->route('clientes.index')
-                ->with('success', 'Cliente eliminado exitosamente.');
+                ->with('success', 'Cliente eliminado exitosamente. El usuario asociado ha sido desactivado.');
                 
         } catch (\Exception $e) {
             DB::rollback();
@@ -200,16 +235,23 @@ class ClienteController extends Controller
         try {
             DB::beginTransaction();
             
+            $newStatus = !$cliente->is_active;
+            
             $cliente->update([
-                'is_active' => !$cliente->is_active
+                'is_active' => $newStatus
             ]);
+            
+            // Sincronizar el estado con el usuario asociado
+            if ($cliente->user) {
+                $cliente->user->update(['is_active' => $newStatus]);
+            }
             
             DB::commit();
             
             $status = $cliente->is_active ? 'activado' : 'desactivado';
             
             return redirect()->route('clientes.index')
-                ->with('success', "Cliente {$status} exitosamente.");
+                ->with('success', "Cliente {$status} exitosamente. El acceso del usuario también ha sido {$status}.");
                 
         } catch (\Exception $e) {
             DB::rollback();
