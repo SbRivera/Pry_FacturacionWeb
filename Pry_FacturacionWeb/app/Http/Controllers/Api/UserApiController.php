@@ -90,6 +90,7 @@ class UserApiController extends Controller
             ]);
 
             $role = Role::findOrFail($validated['role_id']);
+            /** @var \Spatie\Permission\Models\Role $role */
             $user->assignRole($role->name);
 
             DB::commit();
@@ -164,6 +165,7 @@ class UserApiController extends Controller
 
             // Actualizar rol
             $role = Role::findOrFail($validated['role_id']);
+            /** @var \Spatie\Permission\Models\Role $role */
             $user->syncRoles([$role->name]);
 
             DB::commit();

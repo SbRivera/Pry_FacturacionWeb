@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Cliente;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Laravel\Sanctum\PersonalAccessToken;
@@ -66,8 +67,10 @@ class ApiTokenApiController extends Controller
                 ], 400);
             }
 
+            /** @var User $user */
+            $user = $cliente->user;
             $abilities = $validated['abilities'] ?? ['*'];
-            $token = $cliente->user->createToken($validated['name'], $abilities);
+            $token = $user->createToken($validated['name'], $abilities);
 
             return response()->json([
                 'success' => true,
@@ -107,7 +110,9 @@ class ApiTokenApiController extends Controller
                 ], 400);
             }
 
-            $token = $cliente->user->tokens()->find($tokenId);
+            /** @var User $user */
+            $user = $cliente->user;
+            $token = $user->tokens()->find($tokenId);
 
             if (!$token) {
                 return response()->json([
@@ -139,7 +144,7 @@ class ApiTokenApiController extends Controller
             $user = $request->user();
             $token = $request->user()->currentAccessToken();
 
-            if (!$token) {
+            if ($token === null) {
                 return response()->json([
                     'success' => false,
                     'message' => 'No se pudo obtener información del token actual'
@@ -178,14 +183,16 @@ class ApiTokenApiController extends Controller
         try {
             $token = $request->user()->currentAccessToken();
 
-            if (!$token) {
+            if ($token === null) {
                 return response()->json([
                     'success' => false,
                     'message' => 'No se pudo obtener el token actual'
                 ], 400);
             }
 
-            $request->user()->currentAccessToken()->delete();
+            /** @var \Laravel\Sanctum\PersonalAccessToken $currentToken */
+            $currentToken = $request->user()->currentAccessToken();
+            $currentToken->delete();
 
             return response()->json([
                 'success' => true,

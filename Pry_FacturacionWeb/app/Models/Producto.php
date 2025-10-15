@@ -13,6 +13,8 @@ class Producto extends Model
     protected $fillable = [
         'nombre',
         'descripcion',
+        'categoria',
+        'codigo',
         'stock',
         'precio',
         'is_active'
@@ -48,6 +50,22 @@ class Producto extends Model
     public function scopeWithStock($query)
     {
         return $query->where('stock', '>', 0);
+    }
+
+    /**
+     * Accessor para 'activo' (compatibilidad)
+     */
+    public function getActivoAttribute()
+    {
+        return $this->is_active;
+    }
+
+    /**
+     * Mutator para 'activo' (compatibilidad)
+     */
+    public function setActivoAttribute($value)
+    {
+        $this->attributes['is_active'] = $value;
     }
 
     /**

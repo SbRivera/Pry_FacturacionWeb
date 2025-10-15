@@ -169,6 +169,7 @@ class PagoController extends Controller
 
             // Verificar si la factura está completamente pagada
             $factura = $pago->factura;
+            /** @var \App\Models\Factura $factura */
             $totalPagado = $factura->pagos()->where('estado', 'aprobado')->sum('monto_pagado');
 
             if ($totalPagado >= $factura->total) {
@@ -182,13 +183,16 @@ class PagoController extends Controller
 
             // Enviar correo de notificación al cliente
             try {
-                $cliente = $pago->factura->cliente;
+                $factura = $pago->factura;
+                /** @var \App\Models\Factura $factura */
+                $cliente = $factura->cliente;
+                /** @var \App\Models\Cliente $cliente */
                 if ($cliente && $cliente->email) {
                     Mail::to($cliente->email)->send(new PagoAprobado($pago));
                     Log::info("Correo de pago aprobado enviado", [
                         'pago_id' => $pago->id,
                         'cliente_email' => $cliente->email,
-                        'factura_numero' => $pago->factura->numero_factura
+                        'factura_numero' => $factura->numero_factura
                     ]);
                 }
             } catch (\Exception $e) {

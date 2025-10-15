@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Cliente;
 use App\Models\Role;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\Rule;
@@ -259,7 +260,9 @@ class ClienteApiController extends Controller
             }
 
             $role = Role::findOrFail($validated['role_id']);
-            $cliente->user->syncRoles([$role->name]);
+            /** @var User $user */
+            $user = $cliente->user;
+            $user->syncRoles([$role->name]);
 
             return response()->json([
                 'success' => true,

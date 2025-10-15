@@ -64,4 +64,20 @@ class User extends Authenticatable
     {
         return $query->where('is_active', true);
     }
+
+    /**
+     * Accessor para 'activo' (compatibilidad)
+     */
+    public function getActivoAttribute()
+    {
+        return $this->is_active;
+    }
+
+    /**
+     * Mutator para 'activo' (compatibilidad)
+     */
+    public function setActivoAttribute($value)
+    {
+        $this->attributes['is_active'] = $value;
+    }
 }

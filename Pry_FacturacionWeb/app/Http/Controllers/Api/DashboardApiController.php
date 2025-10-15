@@ -213,6 +213,7 @@ class DashboardApiController extends Controller
     private function getClienteDashboard(User $user): JsonResponse
     {
         $cliente = $user->cliente;
+        /** @var \App\Models\Cliente $cliente */
         
         if (!$cliente) {
             return response()->json([
@@ -260,7 +261,7 @@ class DashboardApiController extends Controller
      */
     private function getVentasPorMes(): array
     {
-        $ventas = Factura::select(
+        $ventasRaw = Factura::select(
                 DB::raw('YEAR(created_at) as year'),
                 DB::raw('MONTH(created_at) as month'),
                 DB::raw('SUM(total) as total'),
@@ -271,15 +272,16 @@ class DashboardApiController extends Controller
             ->groupBy('year', 'month')
             ->orderBy('year', 'desc')
             ->orderBy('month', 'desc')
-            ->get()
-            ->map(function ($item) {
-                return [
-                    'periodo' => $item->year . '-' . str_pad($item->month, 2, '0', STR_PAD_LEFT),
-                    'total' => $item->total,
-                    'cantidad' => $item->cantidad
-                ];
-            })
-            ->toArray();
+            ->get();
+
+        $ventas = [];
+        foreach ($ventasRaw as $item) {
+            $ventas[] = [
+                'periodo' => $item->year . '-' . str_pad((string)$item->month, 2, '0', STR_PAD_LEFT),
+                'total' => $item->total,
+                'cantidad' => $item->cantidad
+            ];
+        }
 
         return $ventas;
     }
@@ -333,7 +335,7 @@ class DashboardApiController extends Controller
      */
     private function getComprasPorMesCliente(int $clienteId): array
     {
-        $compras = Factura::select(
+        $comprasRaw = Factura::select(
                 DB::raw('YEAR(created_at) as year'),
                 DB::raw('MONTH(created_at) as month'),
                 DB::raw('SUM(total) as total'),
@@ -345,15 +347,16 @@ class DashboardApiController extends Controller
             ->groupBy('year', 'month')
             ->orderBy('year', 'desc')
             ->orderBy('month', 'desc')
-            ->get()
-            ->map(function ($item) {
-                return [
-                    'periodo' => $item->year . '-' . str_pad($item->month, 2, '0', STR_PAD_LEFT),
-                    'total' => $item->total,
-                    'cantidad' => $item->cantidad
-                ];
-            })
-            ->toArray();
+            ->get();
+
+        $compras = [];
+        foreach ($comprasRaw as $item) {
+            $compras[] = [
+                'periodo' => $item->year . '-' . str_pad((string)$item->month, 2, '0', STR_PAD_LEFT),
+                'total' => $item->total,
+                'cantidad' => $item->cantidad
+            ];
+        }
 
         return $compras;
     }

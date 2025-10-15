@@ -18,7 +18,8 @@ class Factura extends Model
         'cliente_id',
         'total',
         'estado',
-        'numero_factura'
+        'numero_factura',
+        'observaciones'
     ];
 
     protected $casts = [

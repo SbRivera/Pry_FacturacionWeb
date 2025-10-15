@@ -37,7 +37,7 @@ class CheckPagos extends Command
                     return [
                         $pago->id,
                         $pago->estado,
-                        '$' . number_format($pago->monto_pagado, 2),
+                        '$' . number_format((float)$pago->monto_pagado, 2),
                         $pago->factura->cliente->nombre ?? 'Sin cliente',
                         $pago->user->name ?? 'Sin usuario',
                         $pago->created_at->format('d/m/Y H:i')

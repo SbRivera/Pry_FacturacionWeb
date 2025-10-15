@@ -31,6 +31,7 @@ class FacturaApiController extends Controller
             // Si es un cliente, solo puede ver sus propias facturas
             if ($user->hasRole('Cliente')) {
                 $cliente = $user->cliente;
+                /** @var \App\Models\Cliente $cliente */
                 if (!$cliente) {
                     return response()->json([
                         'success' => false,
@@ -199,6 +200,7 @@ class FacturaApiController extends Controller
             // Si es un cliente, verificar que la factura le pertenezca
             if ($user->hasRole('Cliente')) {
                 $cliente = $user->cliente;
+                /** @var \App\Models\Cliente $cliente */
                 if (!$cliente || $factura->cliente_id !== $cliente->id) {
                     return response()->json([
                         'success' => false,
@@ -249,6 +251,7 @@ class FacturaApiController extends Controller
 
             // Restaurar stock de productos anteriores
             foreach ($factura->productos as $producto) {
+                /** @var \App\Models\Producto $producto */
                 $producto->increment('stock', $producto->pivot->cantidad);
             }
 
@@ -348,6 +351,7 @@ class FacturaApiController extends Controller
 
             // Restaurar stock de todos los productos
             foreach ($factura->productos as $producto) {
+                /** @var \App\Models\Producto $producto */
                 $producto->increment('stock', $producto->pivot->cantidad);
             }
 
@@ -382,6 +386,7 @@ class FacturaApiController extends Controller
             // Si la factura está activa, restaurar stock
             if ($factura->estado === 'activa') {
                 foreach ($factura->productos as $producto) {
+                    /** @var \App\Models\Producto $producto */
                     $producto->increment('stock', $producto->pivot->cantidad);
                 }
             }
@@ -417,6 +422,7 @@ class FacturaApiController extends Controller
             
             if ($user->hasRole('Cliente')) {
                 $cliente = $user->cliente;
+                /** @var \App\Models\Cliente $cliente */
                 if (!$cliente) {
                     return response()->json([
                         'success' => false,
@@ -461,6 +467,7 @@ class FacturaApiController extends Controller
             // Si es un cliente, verificar que la factura le pertenezca
             if ($user->hasRole('Cliente')) {
                 $cliente = $user->cliente;
+                /** @var \App\Models\Cliente $cliente */
                 if (!$cliente || $factura->cliente_id !== $cliente->id) {
                     return response()->json([
                         'success' => false,
@@ -505,6 +512,6 @@ class FacturaApiController extends Controller
         $nextNumber = $lastFactura ? 
             intval(substr($lastFactura->numero_factura, -4)) + 1 : 1;
         
-        return "FAC-{$year}{$month}-" . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
+        return "FAC-{$year}{$month}-" . str_pad((string)$nextNumber, 4, '0', STR_PAD_LEFT);
     }
 }

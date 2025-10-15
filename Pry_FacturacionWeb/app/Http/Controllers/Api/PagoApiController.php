@@ -49,6 +49,7 @@ class PagoApiController extends Controller
 
             // Verificar que el cliente de la factura corresponda al usuario autenticado
             $clienteUsuario = Auth::user()->cliente;
+            /** @var \App\Models\Cliente $clienteUsuario */
             if (!$clienteUsuario || $factura->cliente_id !== $clienteUsuario->id) {
                 return response()->json([
                     'success' => false,
@@ -123,6 +124,7 @@ class PagoApiController extends Controller
 
         $query = Pago::with(['factura'])
             ->whereHas('factura', function ($q) use ($clienteUsuario) {
+                /** @var \App\Models\Cliente $clienteUsuario */
                 $q->where('cliente_id', $clienteUsuario->id);
             });
 
@@ -166,6 +168,7 @@ class PagoApiController extends Controller
 
         $pago = Pago::with(['factura', 'validador'])
             ->whereHas('factura', function ($q) use ($clienteUsuario) {
+                /** @var \App\Models\Cliente $clienteUsuario */
                 $q->where('cliente_id', $clienteUsuario->id);
             })
             ->findOrFail($id);
