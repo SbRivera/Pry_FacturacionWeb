@@ -3,14 +3,6 @@
 Versión: 1.0  
 Fecha: 2025-10-27
 
-Este documento presenta 4 casos de uso clave del Sistema de Facturación y Pagos de TECNOPLUS, con:
-- Flujo normal enumerado
-- Flujos alternos enumerados
-- Reglas de negocio enumeradas
-- Navegabilidad entre pasos del flujo normal, alternos y reglas mediante enlaces
-- Diagramas de caso de uso y de actividades (Mermaid)
-
-Referencia cruzada: ver `ESPECIFICACION_REQUERIMIENTOS_TECNOPLUS.md` (RF/RNF y RB)
 
 ---
 
@@ -65,30 +57,6 @@ Emitir una factura en estado inicial "pendiente" para un cliente, con productos 
   2. Redirige a autenticación o muestra 403.  
   3. Tras autenticarse o corregir permisos, retorna al [Paso 1](#uc01-fn-1).
 
-### Diagrama — Caso de uso (Mermaid)
-```mermaid
-flowchart LR
-  actorVentas([Actor: Ventas])
-  useCase(["Crear Factura"]):::uc
-  actorVentas --> useCase
-  classDef uc fill:#eef,stroke:#447
-```
-
-### Diagrama — Actividades (Mermaid)
-```mermaid
-flowchart TD
-  A([Inicio]) --> B[Seleccionar cliente]
-  B -->|válido| C[Agregar productos y cantidades]
-  B -->|inválido| X1[Error cliente] --> B
-  C --> D{Stock suficiente?}
-  D -- Sí --> E[Calcular totales]
-  D -- No --> X2[Mensaje stock insuficiente] --> C
-  E --> F[Confirmar creación]
-  F --> G[Registrar factura (pendiente)]
-  G --> H{Descargar PDF?}
-  H -- Sí --> I[Generar PDF] --> J([Fin])
-  H -- No --> J([Fin])
-```
 
 ---
 
@@ -136,29 +104,6 @@ Permitir a un Cliente registrar un pago contra una de sus facturas mediante toke
   1. El sistema rechaza el pago con mensaje.  
   2. El cliente verifica el estado de factura y reintenta → [Paso 3](#uc02-fn-3).
 
-### Diagrama — Caso de uso (Mermaid)
-```mermaid
-flowchart LR
-  actorCliente([Actor: Cliente])
-  useCase(["Registrar Pago via API"]):::uc
-  actorCliente --> useCase
-  classDef uc fill:#eef,stroke:#447
-```
-
-### Diagrama — Actividades (Mermaid)
-```mermaid
-flowchart TD
-  A([Inicio]) --> B[POST /api/cliente/pagos]
-  B --> C{Token válido y usuario activo?}
-  C -- No --> X1[401/403] --> B
-  C -- Sí --> D{Factura del cliente?}
-  D -- No --> X2[403 Propiedad inválida] --> B
-  D -- Sí --> E{Factura pagable?}
-  E -- No --> X3[Rechazar (estado no pagable)] --> B
-  E -- Sí --> F{Monto ≤ saldo?}
-  F -- No --> X4[422 Monto excedido] --> B
-  F -- Sí --> G[Crear pago (pendiente)] --> H([Fin 201])
-```
 
 ---
 
@@ -201,29 +146,7 @@ Permitir a un operador con rol Pagos aprobar o rechazar pagos pendientes y actua
   2. Muestra aviso y actualiza la vista.  
   3. El operador selecciona otro pago → [Paso 2](#uc03-fn-2).
 
-### Diagrama — Caso de uso (Mermaid)
-```mermaid
-flowchart LR
-  actorPagos([Actor: Pagos])
-  useCase(["Validar Pago"]):::uc
-  actorPagos --> useCase
-  classDef uc fill:#eef,stroke:#447
-```
 
-### Diagrama — Actividades (Mermaid)
-```mermaid
-flowchart TD
-  A([Inicio]) --> B[Ver pagos pendientes]
-  B --> C[Seleccionar pago]
-  C --> D{¿Aprobar?}
-  D -- Sí --> E[Marcar aprobado]
-  E --> F{¿Cubre total factura?}
-  F -- Sí --> G[Marcar factura como pagada]
-  F -- No --> H[Mantener estado de factura]
-  G --> I[Registrar auditoría] --> J([Fin])
-  H --> I[Registrar auditoría] --> J([Fin])
-  D -- No --> K[Rechazar pago (motivo)] --> L[Mantener estado factura] --> I
-```
 
 ---
 
@@ -269,38 +192,7 @@ Emitir, listar y revocar tokens API para clientes/usuarios, controlando el acces
   2. El sistema revoca el token actual ([RB-03-UC04](#uc04-rb3)).  
   3. Si requiere un nuevo token, el Administrador vuelve al [Paso 2](#uc04-fn-2).
 
-### Diagrama — Caso de uso (Mermaid)
-```mermaid
-flowchart LR
-  actorAdmin([Actor: Administrador])
-  uc1(["Emitir Token"]):::uc
-  uc2(["Listar Tokens"]):::uc
-  uc3(["Revocar Token"]):::uc
-  actorAdmin --> uc1
-  actorAdmin --> uc2
-  actorAdmin --> uc3
-  classDef uc fill:#eef,stroke:#447
-```
 
-### Diagrama — Actividades (Mermaid)
-```mermaid
-flowchart TD
-  A([Inicio]) --> B[Ir a API Tokens]
-  B --> C{¿Emitir nuevo?}
-  C -- Sí --> D[Seleccionar cliente/usuario]
-  D --> E[Generar token]
-  E --> F[Muestra token una sola vez]
-  F --> G([Fin])
-  C -- No --> H{¿Revocar alguno?}
-  H -- Sí --> I[Listar tokens]
-  I --> J[Seleccionar token]
-  J --> K[Revocar token]
-  K --> L[Acceso invalidado] --> G
-  H -- No --> G([Fin])
-```
 
 ---
 
-## Notas
-- Los diagramas Mermaid pueden requerir un visor compatible (por ejemplo, GitHub, VS Code con renderizador Mermaid).
-- La navegación entre flujos y reglas está resuelta con anclas internas (enlaces en cada paso/alterno/regla).
