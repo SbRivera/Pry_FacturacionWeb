@@ -40,7 +40,7 @@
                     <p class="mt-2 text-sm text-gray-600">Genera una nueva factura de venta</p>
                 </div>
                 <div>
-                    <a href="{{ route('facturas.index') }}" class="inline-flex items-center px-4 py-2 bg-gray-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 active:bg-gray-900 focus:outline-none focus:border-gray-900 focus:ring ring-gray-300 disabled:opacity-25 transition ease-in-out duration-150">
+                    <a href="{{ route('facturas.index') }}" class="inline-flex items-center px-4 py-2 bg-gray-600 border border-transparent rounded-md font-semibold text-xs text-black uppercase tracking-widest hover:bg-gray-700 active:bg-gray-900 focus:outline-none focus:border-gray-900 focus:ring ring-gray-300 disabled:opacity-25 transition ease-in-out duration-150">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                         </svg>
@@ -94,7 +94,7 @@
                                 <div class="mt-1">
                                     <select name="cliente_id" 
                                             id="cliente_id"
-                                            class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('cliente_id') border-red-500 @enderror"
+                                            class="text-gray-700 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('cliente_id') border-red-500 @enderror"
                                             onchange="updateClientInfo()">
                                         <option value="">-- Seleccione un cliente --</option>
                                         @foreach($clientes as $cliente)
@@ -143,7 +143,7 @@
                                                 <div class="flex items-center">
                                                     <div class="flex-shrink-0 h-10 w-10">
                                                         <div class="h-10 w-10 rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 flex items-center justify-center">
-                                                            <span class="text-sm font-medium text-white">{{ strtoupper(substr($producto->nombre, 0, 2)) }}</span>
+                                                            <span class="text-sm font-medium text-black">{{ strtoupper(substr($producto->nombre, 0, 2)) }}</span>
                                                         </div>
                                                     </div>
                                                     <div class="ml-4 flex-1">
@@ -169,7 +169,7 @@
                                                                min="0" 
                                                                max="{{ $producto->stock }}" 
                                                                value="{{ old('productos.'.$producto->id, 0) }}" 
-                                                               class="w-20 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                                               class="text-gray-700 w-20 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                                                                onchange="calculateTotal()"
                                                                data-precio="{{ $producto->precio }}">
                                                     </div>
@@ -193,7 +193,7 @@
                                     <h3 class="mt-2 text-sm font-medium text-gray-900">No hay productos disponibles</h3>
                                     <p class="mt-1 text-sm text-gray-500">Agrega productos al inventario para poder facturar.</p>
                                     <div class="mt-6">
-                                        <a href="{{ route('productos.create') }}" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                                        <a href="{{ route('productos.create') }}" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-black bg-blue-600 hover:bg-blue-700">
                                             Agregar Producto
                                         </a>
                                     </div>
@@ -266,7 +266,7 @@
                             <button type="submit" 
                                     id="submit-btn"
                                     disabled
-                                    class="w-full inline-flex justify-center items-center px-4 py-3 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-gray-400 cursor-not-allowed disabled:opacity-50">
+                                    class="w-full inline-flex justify-center items-center px-4 py-3 border border-transparent shadow-sm text-sm font-medium rounded-md text-black bg-gray-400 cursor-not-allowed disabled:opacity-50">
                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                                 </svg>
@@ -275,7 +275,7 @@
                             
                             <div class="mt-3">
                                 <a href="{{ route('facturas.index') }}" 
-                                   class="w-full inline-flex justify-center items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                   class=" w-full inline-flex justify-center items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md  bg-red-500 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                                     Cancelar
                                 </a>
                             </div>

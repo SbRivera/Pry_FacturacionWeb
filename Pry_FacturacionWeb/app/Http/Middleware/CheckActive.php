@@ -12,8 +12,8 @@ class CheckActive
      * Handle an incoming request.
      *
      * @param  Request  $request
-     * @param  \Closure(\Illuminate\Http\Request): (\Illuminate\Http\Response)  $next
-     * @return \Illuminate\Http\Response
+     * @param  \Closure(\Illuminate\Http\Request): (mixed)  $next
+     * @return mixed
      */
     public function handle(Request $request, Closure $next)
     {

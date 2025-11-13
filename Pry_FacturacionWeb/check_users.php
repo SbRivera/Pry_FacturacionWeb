@@ -21,6 +21,7 @@ foreach ($users as $user) {
     echo "Email: {$user->email}\n";
     echo "Roles: " . ($user->roles->isEmpty() ? 'NO ROLES ASSIGNED' : $user->roles->pluck('name')->join(', ')) . "\n";
     echo "Is Active: " . ($user->is_active ? 'Yes' : 'No') . "\n";
+    echo "Email Verified: " . ($user->email_verified_at ? 'Yes' : 'No') . "\n";
     echo "Created: " . $user->created_at->format('Y-m-d H:i:s') . "\n";
     echo "-" . str_repeat("-", 50) . "\n";
 }
@@ -37,4 +38,23 @@ foreach ($roles as $role) {
     echo "-" . str_repeat("-", 50) . "\n";
 }
 
-echo "\n✅ Check completed!\n";
+// Fix admin email verification
+echo "\n🛠️ Verifying admin users emails...\n";
+echo "=" . str_repeat("=", 50) . "\n";
+
+$adminUsers = User::role('Administrador')->get();
+
+foreach ($adminUsers as $user) {
+    echo "Admin: {$user->name} ({$user->email})\n";
+    
+    if (!$user->email_verified_at) {
+        // Marcar el email como verificado
+        $user->email_verified_at = now();
+        $user->save();
+        echo "  ✅ Email verified automatically\n";
+    } else {
+        echo "  ✓ Email already verified\n";
+    }
+}
+
+echo "\n✅ Check and fixes completed!\n";

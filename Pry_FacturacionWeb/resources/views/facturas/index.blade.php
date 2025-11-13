@@ -131,7 +131,7 @@
                 <div class="flex items-center space-x-4">
                     <div>
                         <label for="estado-filter" class="block text-sm font-medium text-gray-700">Estado</label>
-                        <select id="estado-filter" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
+                        <select id="estado-filter" class="text-gray-700 mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
                             <option value="">Todos</option>
                             <option value="activa">Activas</option>
                             <option value="anulada">Anuladas</option>
@@ -213,7 +213,7 @@
                                         @endif
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        @if($factura->estado === 'activa')
+                                        {{-- @if($factura->estado === 'activa')
                                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                                 <div class="w-1.5 h-1.5 bg-green-400 rounded-full mr-1"></div>
                                                 Activa
@@ -223,7 +223,11 @@
                                                 <div class="w-1.5 h-1.5 bg-red-400 rounded-full mr-1"></div>
                                                 Anulada
                                             </span>
-                                        @endif
+                                        @endif --}}
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                                <div class="w-1.5 h-1.5 bg-red-400 rounded-full mr-1"></div>
+                                                {{ $factura->estado }}
+                                            </span>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                         <div class="flex items-center space-x-2">

@@ -4,6 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Factura extends Model
@@ -15,7 +18,8 @@ class Factura extends Model
         'cliente_id',
         'total',
         'estado',
-        'numero_factura'
+        'numero_factura',
+        'observaciones'
     ];
 
     protected $casts = [
@@ -25,7 +29,7 @@ class Factura extends Model
     /**
      * Relación con el usuario que creó la factura
      */
-    public function user()
+    public function user():BelongsTo
     {
         return $this->belongsTo(User::class);
     }
@@ -33,7 +37,7 @@ class Factura extends Model
     /**
      * Relación con el cliente
      */
-    public function cliente()
+    public function cliente():BelongsTo
     {
         return $this->belongsTo(Cliente::class);
     }
@@ -41,11 +45,19 @@ class Factura extends Model
     /**
      * Relación con productos (many-to-many)
      */
-    public function productos()
+    public function productos():BelongsToMany
     {
         return $this->belongsToMany(Producto::class, 'factura_producto')
                     ->withPivot('cantidad', 'precio_unitario')
                     ->withTimestamps();
+    }
+
+    /**
+     * Relación con pagos
+     */
+    public function pagos(): HasMany
+    {
+        return $this->hasMany(Pago::class);
     }
 
     /**
@@ -65,6 +77,22 @@ class Factura extends Model
     }
 
     /**
+     * Scope para facturas pendientes de pago
+     */
+    public function scopePendientes($query)
+    {
+        return $query->where('estado', 'pendiente');
+    }
+
+    /**
+     * Scope para facturas pagadas
+     */
+    public function scopePagadas($query)
+    {
+        return $query->where('estado', 'pagada');
+    }
+
+    /**
      * Boot method para generar número de factura automáticamente
      */
     protected static function boot()
@@ -73,8 +101,12 @@ class Factura extends Model
 
         static::creating(function ($factura) {
             if (empty($factura->numero_factura)) {
+                // Obtener el último número de factura para generar secuencial
+                $ultimaFactura = static::orderBy('id', 'desc')->first();
+                $siguienteNumero = $ultimaFactura ? ($ultimaFactura->id + 1) : 1;
+                
                 $factura->numero_factura = 'FAC-' . str_pad(
-                    static::count() + 1, 
+                    (string)$siguienteNumero, 
                     6, 
                     '0', 
                     STR_PAD_LEFT

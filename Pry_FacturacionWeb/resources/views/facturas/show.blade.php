@@ -131,20 +131,20 @@
                             <div class="space-y-2">
                                 <div class="flex justify-between">
                                     <span class="text-gray-600">Fecha de Emisión:</span>
-                                    <span class="font-medium">{{ $factura->created_at->format('d/m/Y') }}</span>
+                                    <span class="text-gray-400 font-medium">{{ $factura->created_at->format('d/m/Y') }}</span>
                                 </div>
                                 <div class="flex justify-between">
                                     <span class="text-gray-600">Hora:</span>
-                                    <span class="font-medium">{{ $factura->created_at->format('H:i:s') }}</span>
+                                    <span class="text-gray-400 font-medium">{{ $factura->created_at->format('H:i:s') }}</span>
                                 </div>
                                 <div class="flex justify-between">
                                     <span class="text-gray-600">Estado:</span>
-                                    <span class="font-medium">{{ ucfirst($factura->estado) }}</span>
+                                    <span class="text-gray-400 font-medium">{{ ucfirst($factura->estado) }}</span>
                                 </div>
                                 @if($factura->estado === 'anulada' && $factura->updated_at != $factura->created_at)
                                     <div class="flex justify-between">
                                         <span class="text-gray-600">Fecha de Anulación:</span>
-                                        <span class="font-medium text-red-600">{{ $factura->updated_at->format('d/m/Y H:i') }}</span>
+                                        <span class="text-gray-400 font-medium text-red-600">{{ $factura->updated_at->format('d/m/Y H:i') }}</span>
                                     </div>
                                 @endif
                             </div>
@@ -180,7 +180,7 @@
                             @endphp
                             @foreach($factura->productos as $producto)
                                 @php
-                                    $itemSubtotal = $producto->pivot->precio * $producto->pivot->cantidad;
+                                    $itemSubtotal = $producto->pivot->precio_unitario * $producto->pivot->cantidad;
                                     $subtotal += $itemSubtotal;
                                 @endphp
                                 <tr>
@@ -200,8 +200,9 @@
                                         </div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        ${{ number_format($producto->pivot->precio, 2) }}
-                                    </td>
+    ${{ number_format($producto->pivot->precio_unitario, 2) }}
+</td>
+
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                         {{ $producto->pivot->cantidad }}
                                     </td>
@@ -257,6 +258,7 @@
                         
                         <form action="{{ route('facturas.anular', $factura) }}" method="POST" class="inline" onsubmit="return confirm('¿Estás seguro de anular esta factura? Esta acción no se puede deshacer.')">
                             @csrf
+                            @method('PATCH')
                             <button type="submit" class="inline-flex items-center px-4 py-2 border border-red-300 rounded-md shadow-sm text-sm font-medium text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
